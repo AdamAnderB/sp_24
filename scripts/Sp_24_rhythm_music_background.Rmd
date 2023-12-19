@@ -1,0 +1,333 @@
+---
+title: "SP_24_rhythm_music_background"
+author: "Adam A. Bramlett"
+date: "2023-12-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(xml2)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(tidyverse)
+library(tidyverse)
+library(ggExtra)
+library(ggridges)
+library(gghalves)
+library(psycho)
+library(GGally)
+library(corrplot)
+```
+
+```{r}
+#file management
+base_path<-"/Users/adambramlett/scripts/music_project_23"
+master_path<-"/Users/adambramlett/scripts/music_project_23/data"
+list.files(file.path(master_path,"rds_folder"))
+data_list <- readRDS(file.path(master_path,"rds_folder","data_exp_141883-v12_list.rds"))
+```
+
+```{r}
+#gold smith
+gs_data<-data_list$Goldsmiths_Musical_Sophistication_Index_GoldMSI__Original_Version_English
+#music ear test
+met_data<-data_list$Musical_Ear_Test_MET__English_Instructions
+#rhythm data
+rhythm_data<-data_list$Rhythm_memory
+#rhythm key
+rhythm_key<-read.csv(file.path(base_path,"data","workflow_data","rhythm_key.csv"))
+#melody data
+melody_data<-data_list$Melody_memory
+#melody key
+melody_key<-read.csv(file.path(base_path,"data","workflow_data","melody_key.csv"))
+#italian data
+italian_data<-data_list$AX_Hindi_italian_Japanese_italian
+#italian data
+japanese_data<-data_list$AX_Hindi_italian_Japanese_japanese
+#mandarin data
+mandarin_data<-data_list$Mandarin_AX_Tone
+
+```
+
+```{r}
+#clean gold smith data
+keep_list<-c("score|rating|goldmsi39")
+
+gs_data_clean<-gs_data%>%
+  select(Participant.Private.ID,Response,Question.Key)%>%
+  filter(str_detect(Question.Key, keep_list))%>%
+  mutate(most_played_instrument = if_else(Question.Key=="goldmsi39",Response,NA))%>%
+  mutate(most_played_instrument = if_else(most_played_instrument=="","none",most_played_instrument))%>%
+  fill(most_played_instrument, .direction = "up")%>%
+  filter(Question.Key!="goldmsi39")%>%
+  separate(Question.Key, into = c("question_content", "question_type"), sep = "_")%>%
+  pivot_wider(names_from = question_type,values_from =Response)%>%
+  mutate(score = as.numeric(score))%>%
+  mutate_if(is.character, as.factor)
+
+gs_data_clean%>%
+  mutate(Participant.Private.ID = as.factor(Participant.Private.ID ))%>%
+  ggplot(aes(x=question_content,y=score,alpha=.2))+
+  geom_jitter(aes(color = rating))+
+  geom_violin()
+
+gs_data_agg<-
+  gs_data_clean%>%
+  select(-rating)%>%
+  pivot_wider(names_from = question_content,
+              values_from = score,
+              names_prefix = "gs_")
+```
+
+```{r}
+remove_list<-c("Instruções|ractice|INSTRUÇÕES|Final")
+
+#clean musical ear test
+met_data_clean<-met_data%>%
+  select(Participant.Private.ID,
+         Spreadsheet.Row,Response,
+         display,
+         Spreadsheet,
+         Zone.Name,Zone.Type,
+         Response,
+         Reaction.Time,
+         Attempt,
+         Correct)%>%
+  filter(!str_detect(display, remove_list),
+         display!="",
+         Zone.Type == "response_button_text")%>%
+  mutate(Reaction.Time = as.numeric(Reaction.Time),
+         Correct = as.numeric(Correct))%>%
+  mutate_if(is.character,as.factor)
+before_mad_removal<-nrow(met_data_clean)
+#removal of data by Median absolute deviation
+met_data_clean<-met_data_clean%>%
+  group_by(display)%>%
+  mutate(log_rt=log(Reaction.Time))%>%
+  mutate(display_medians = median(log_rt),
+         abs_distance = abs(display_medians-log_rt),
+         mean_distance = mean(abs_distance),
+         upper_mad = display_medians+(mean_distance*3),
+         lower_mad = display_medians-(mean_distance*3))%>%
+  filter(log_rt<upper_mad &log_rt>lower_mad)
+after_mad_removal<-nrow(met_data_clean)
+
+#points removed
+before_mad_removal-after_mad_removal
+#data kept
+after_mad_removal/before_mad_removal
+
+#showing the data
+met_data_clean%>%ggplot(aes(x=log_rt,alpha=.2))+
+  geom_histogram()+
+  geom_point(aes(x=upper_mad,y=.5),color = "blue",size=3)+
+  geom_violin(aes(x=lower_mad,y=.5),color = "red",size=3)+
+  facet_wrap(display~.)
+
+#agg data
+met_data_agg<-met_data_clean%>%
+  group_by(display,Participant.Private.ID)%>%
+  summarise(score = mean(Correct))%>%
+  pivot_wider(names_from = display,values_from = score)%>%
+  mutate(met_melody_scores=Melodia,
+         met_rhythm_scores=Ritmo)%>%
+  select(-c("Melodia","Ritmo" ))
+
+met_data_agg%>%
+  ggplot(aes(met_melody_scores))+
+  geom_histogram()
+
+met_data_agg%>%
+  ggplot(aes(met_rhythm_scores))+
+  geom_histogram()
+
+gs_met_data<-gs_data_agg%>%
+  left_join(met_data_agg)
+```
+
+```{r}
+#rhythm and memory melody data
+music_memory<-read.csv("/Users/adambramlett/scripts/CMUsic/cmusic_data/tidy_data/sp_24_HDDM_music_data.csv")
+music_memory$Participant.Private.ID<-as.factor(music_memory$Participant.Private.ID)
+```
+
+```{r}
+all_data<-music_memory%>%left_join(gs_met_data)
+```
+
+```{r}
+corr_data<-all_data%>%
+  select(melody_score:met_rhythm_scores)%>%
+  distinct()%>%
+  select(-c(most_played_instrument,centered_beats,centered_melody))%>%
+  mutate(memory_beat_score=beat_score,
+         memory_melody_score=melody_score)%>%
+  select(-c(beat_score,melody_score))
+
+
+#options(verbose = FALSE)
+
+corr_data%>%ggpairs()
+
+title="goldsmith and musical ear variables relationship"
+
+ggsave(file.path(base_path,"SP_24","visualizations",paste(project_name,str_replace_all(title," ","_"),".pdf",sep="")),width = 10, height = 15)
+
+correlations<-corr_data%>%
+  cor()
+corrplot(correlations,type = 'lower', order = 'AOE', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10))
+title="corr_table"
+ggsave(file.path(base_path,"SP_24","visualizations",paste(project_name,str_replace_all(title," ","_"),".pdf",sep="")),width = 10, height = 15)
+
+```
+```{r}
+#simplified
+corr_data<-all_data%>%
+  select(melody_score:met_rhythm_scores)%>%
+  distinct()%>%
+  select(-c(most_played_instrument,centered_beats,centered_melody))%>%
+  mutate(memory_beat_score=beat_score,
+         memory_melody_score=melody_score)%>%
+  select(-c(beat_score,melody_score))%>%
+  select(-c(gs_singingabil,gs_activeeng,gs_emotions,gs_perceptabil,gs_musictrain))
+
+
+#options(verbose = FALSE)
+
+corr_data%>%ggpairs()
+
+title="goldsmith and musical ear variables relationship simple"
+
+ggsave(file.path(base_path,"SP_24","visualizations",paste(project_name,str_replace_all(title," ","_"),".pdf",sep="")),width = 10, height = 15)
+
+correlations<-corr_data%>%
+  cor()
+corrplot(correlations,type = 'lower', order = 'AOE', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10))
+title="corr_table"
+ggsave(file.path(base_path,"SP_24","visualizations",paste(project_name,str_replace_all(title," ","_"),".pdf",sep="")),width = 10, height = 15)
+```
+```{r}
+lang_dprime<-read.csv("/Users/adambramlett/scripts/CMUsic/cmusic_data/cleaned_data/sp_24_sp_24_all_d_prime_data.csv")
+
+musical_data<-all_data%>%
+  select(Participant.Private.ID,melody_score:met_rhythm_scores)%>%
+  distinct()%>%
+  select(-c(most_played_instrument,centered_beats,centered_melody))%>%
+  mutate(memory_beat_score=beat_score,
+         memory_melody_score=melody_score)%>%
+  select(-c(beat_score,melody_score))
+
+lang_dprime<-lang_dprime%>%select(Participant.Private.ID:language_c)
+lang_dprime$Participant.Private.ID<-as.factor(lang_dprime$Participant.Private.ID)
+
+all_all_data<-lang_dprime%>%left_join(musical_data)
+
+
+p_background<-read.csv(file.path(base_path,"data","workflow_data","participants-fall24.csv"))
+p_background$Participant.Private.ID<-as.factor(p_background$Participant.Private.ID)
+
+p_ground<-p_background%>%
+  mutate(music_student=as.factor(if_else(Music == "None",0,1)))
+
+
+complete_data<-all_all_data%>%left_join(p_ground)
+title="huge_table"
+ggsave(file.path(base_path,"SP_24","visualizations",paste(project_name,str_replace_all(title," ","_"),".pdf",sep="")),width = 10, height = 15)
+
+complete_data%>%select(-Participant.Private.ID)%>%ggpairs()
+```
+
+```{r}
+all_data<-all_data%>%
+
+library(lmerTest)
+library(lme4)
+m_data<-all_data%>%filter(Spreadsheet.Name=="Mandarin")
+i_data<-all_data%>%filter(Spreadsheet.Name=="italian")
+j_data<-all_data%>%filter(Spreadsheet.Name=="japanese")
+
+
+m_data_m1<-glmer(Answer_correct~
+        gs_general+
+        met_rhythm_scores+
+        met_melody_scores+
+        centered_melody+
+        centered_beats+
+        (1|Participant.Private.ID),
+        family = "binomial" , data=m_data)
+summary(m_data_m1)
+
+i_data_m1<-glmer(Answer_correct~
+        gs_general+
+        met_rhythm_scores+
+        met_melody_scores+
+        centered_melody+
+        centered_beats+
+        (1|Participant.Private.ID),
+        family = "binomial" , data=i_data)
+summary(i_data_m1)
+
+j_data_m1<-glmer(Answer_correct~
+        gs_general+
+        met_rhythm_scores+
+        met_melody_scores+
+        centered_melody+
+        centered_beats+
+        (1|Participant.Private.ID),
+        family = "binomial" , data=j_data)
+summary(j_data_m1)
+```
+
+
+```{r}
+
+i_data_m1<-glmer(Answer_correct~
+        gs_general+
+        met_rhythm_scores+
+        centered_beats+
+        (1|Participant.Private.ID),
+        family = "binomial" , data=i_data)
+summary(i_data_m1)
+
+j_data_m1<-glmer(Answer_correct~
+        gs_general+
+        met_rhythm_scores+
+        centered_beats+
+        (1|Participant.Private.ID),
+        family = "binomial" , data=j_data)
+summary(j_data_m1)
+
+m_data_m1<-glmer(Answer_correct~
+        gs_general+
+        met_melody_scores+
+        centered_melody+
+        (1|Participant.Private.ID),
+        family = "binomial" , data=m_data)
+
+summary(m_data_m1)
+colnames(m_data)
+```
+
+
+```{r}
+View(all_data)
+all_data<-all_data%>%mutate(languguage_type=if_else(Spreadsheet.Name=="Mandarin","tonal","geminate"))
+
+
+all_data_m1<-glmer(Answer_correct~languguage_type*
+        met_melody_scores*
+        centered_melody*
+        met_rhythm_scores*
+        centered_beats*
+        (1|Participant.Private.ID),
+        family = "binomial" , data=all_data)
+summary(all_data_m1)
+
+
+
+
+
+```
