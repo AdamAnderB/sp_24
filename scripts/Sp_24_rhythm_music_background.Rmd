@@ -215,9 +215,9 @@ lang_dprime<-read.csv("/Users/adambramlett/scripts/CMUsic/cmusic_data/cleaned_da
 musical_data<-all_data%>%
   select(Participant.Private.ID,melody_score:met_rhythm_scores)%>%
   distinct()%>%
-  select(-c(most_played_instrument,centered_beats,centered_melody))%>%
-  mutate(memory_beat_score=beat_score,
-         memory_melody_score=melody_score)%>%
+  select(-c(most_played_instrument))%>%
+  mutate(memory_beat_score=centered_beats,
+         memory_melody_score=centered_melody)%>%
   select(-c(beat_score,melody_score))
 
 lang_dprime<-lang_dprime%>%select(Participant.Private.ID:language_c)
@@ -232,12 +232,11 @@ p_background$Participant.Private.ID<-as.factor(p_background$Participant.Private.
 p_ground<-p_background%>%
   mutate(music_student=as.factor(if_else(Music == "None",0,1)))
 
-
+View(complete_data)
 complete_data<-all_all_data%>%left_join(p_ground)
 title="huge_table"
-ggsave(file.path(base_path,"SP_24","visualizations",paste(project_name,str_replace_all(title," ","_"),".pdf",sep="")),width = 10, height = 15)
-
 complete_data%>%select(-Participant.Private.ID)%>%ggpairs()
+ggsave(file.path(base_path,"SP_24","visualizations",paste(project_name,str_replace_all(title," ","_"),".pdf",sep="")),width = 10, height = 15)
 ```
 
 ```{r}
@@ -313,21 +312,262 @@ colnames(m_data)
 
 
 ```{r}
-View(all_data)
-all_data<-all_data%>%mutate(languguage_type=if_else(Spreadsheet.Name=="Mandarin","tonal","geminate"))
+m_ddata<-complete_data%>%filter(Spreadsheet.Name=="Mandarin")
+i_ddata<-complete_data%>%filter(Spreadsheet.Name=="italian")
+j_ddata<-complete_data%>%filter(Spreadsheet.Name=="japanese")
 
 
-all_data_m1<-glmer(Answer_correct~languguage_type*
-        met_melody_scores*
+m_data_m1<-lm(language_dprime~
+        gs_general+
+        centered_melody+
+        centered_beats+
+        met_rhythm_scores+
+        met_melody_scores, data = m_ddata)
+
+summary(m_data_m1)
+
+i_data_m1<-lm(language_dprime~
+        gs_general+
+        centered_melody+
+        centered_beats+
+        met_rhythm_scores+
+        met_melody_scores, data = i_ddata)
+
+summary(i_data_m1)
+
+j_data_m1<-lm(language_dprime~
+        gs_general+
+        centered_melody+
+        centered_beats+
+        met_rhythm_scores+
+        met_melody_scores, data = j_ddata)
+
+summary(j_data_m1)
+
+
+complete_data<-complete_data%>%mutate(languguage_type=if_else(Spreadsheet.Name=="Mandarin","tonal","geminate"))
+
+t_ddata<-complete_data%>%filter(languguage_type=="tonal")
+g_ddata<-complete_data%>%filter(languguage_type=="geminate")
+View(g_ddata)
+
+t_data_m1<-lm(language_dprime~
+        gs_general*
         centered_melody*
-        met_rhythm_scores*
         centered_beats*
-        (1|Participant.Private.ID),
-        family = "binomial" , data=all_data)
-summary(all_data_m1)
+        met_rhythm_scores*
+        met_melody_scores, data = t_ddata)
+
+summary(t_data_m1)
+
+g_data_m1<-lm(language_dprime~
+        gs_general*
+        centered_melody*
+        centered_beats*
+        met_rhythm_scores*
+        met_melody_scores, data = g_ddata)
+
+summary(g_data_m1)
+
+g_ddata%>%ggplot(aes(gs_general))+geom_histogram()
 
 
+gen_data_m1<-lm(gs_general~Spreadsheet.Name*language_dprime, data = complete_data)
+summary(gen_data_m1)
+
+mel_data_m1<-lm(met_melody_scores~Spreadsheet.Name*language_dprime, data = complete_data)
+summary(mel_data_m1)
+
+mel_data_m1<-lm(met_rhythm_scores~Spreadsheet.Name*language_dprime, data = complete_data)
+summary(mel_data_m1)
+```
+
+```{r}
+complete_data%>%ggplot(aes(x=language_dprime,y=centered_melody,color=Spreadsheet.Name))+
+  geom_jitter()+
+  facet_grid(languguage_type~music_student)
+
+complete_data%>%ggplot(aes(x=language_dprime,y=gs_general,color=Spreadsheet.Name))+
+  geom_jitter()+
+  facet_grid(languguage_type~music_student)
+
+complete_data%>%ggplot(aes(x=language_dprime,y=met_melody_scores,color=Spreadsheet.Name))+
+  geom_jitter()+
+  facet_grid(languguage_type~music_student)
+```
+```{r}
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=language_dprime,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+facet_grid(.~Spreadsheet.Name)
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=language_dprime,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=centered_melody,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)
 
 
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=met_melody_scores,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=met_rhythm_scores,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)
+
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=centered_beats,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)
+
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=gs_general,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)
+
+```
+```{r}
+complete_data<-complete_data%>%mutate(language_coded=case_when(
+                                         Language =="Mandarin Chinese" & Spreadsheet.Name == "Mandarin"~"match",
+                                         Language =="Italian" & Spreadsheet.Name == "italian"~"match",
+                                         Language =="Japanese" & Spreadsheet.Name == "japanese"~"match",
+                                         Language != "bob"~"no_match",))
+
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=language_dprime,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)+
+  facet_grid(.~language_coded)
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=centered_beats,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)+
+  facet_grid(.~language_coded)
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=centered_melody,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)+
+  facet_grid(.~language_coded)
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=met_melody_scores,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)+
+  facet_grid(.~language_coded)
+
+complete_data%>%
+  ggplot(aes(x=languguage_type,y=met_rhythm_scores,fill=music_student,alpha=.1))+
+  geom_jitter()+
+  geom_violin()+
+  geom_boxplot(width=.5)+
+  facet_grid(.~language_coded)
+```
+```{r}
+longer_complete<-complete_data%>%
+  mutate(gs_activeeng=gs_activeeng/100,
+         gs_perceptabil=gs_perceptabil/100,
+         gs_musictrain=gs_musictrain/100,
+         gs_singingabil=gs_singingabil/100,
+         gs_emotions=gs_emotions/100,
+         gs_general=gs_general/100)%>%
+  pivot_longer(cols = c(language_dprime:memory_melody_score), names_to = "task",values_to="values")%>%
+  group_by(task,music_student)%>%
+  mutate(mean_values = mean(values),
+         sd_values =sd(values))%>%
+  mutate(task_type = case_when(
+    str_detect(task, "gs") ~ "gs",
+    str_detect(task, "met") ~ "met",
+    str_detect(task, "language") ~ "language"))
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values,color=music_student))+
+  geom_line(aes(group=Participant.Private.ID))+
+  geom_jitter(alpha=.5)+
+  geom_violin(aes(alpha=.5))+
+  geom_boxplot(width=.5,alpha=.5)+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(.~language_coded)
+
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values))+
+  geom_line(aes(color=music_student))+
+  geom_jitter(alpha=.3,aes(color=music_student))+
+  geom_boxplot(width=.3,alpha=.1,aes(color=music_student))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(.~language_coded)
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values))+
+  geom_line(aes(color=language_coded))+
+  geom_jitter(alpha=.3,aes(color=language_coded))+
+  geom_boxplot(width=.3,alpha=.1,aes(color=language_coded))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(.~music_student)
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values))+
+  geom_line(aes(color=music_student,group=Participant.Private.ID))+
+  geom_jitter(alpha=.5,aes(color=music_student))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(.~language_coded)
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values))+
+  geom_line(aes(color=language_coded,group=Participant.Private.ID))+
+  geom_jitter(alpha=.5,aes(color=language_coded))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(.~music_student)
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values))+
+  geom_line(aes(color=music_student,group=Participant.Private.ID))+
+  geom_jitter(alpha=.5,aes(color=music_student))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(Spreadsheet.Name~language_coded)
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values))+
+  geom_line(aes(color=language_coded,group=Participant.Private.ID))+
+  geom_jitter(alpha=.5,aes(color=language_coded))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(Spreadsheet.Name~music_student)
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values))+
+  geom_boxplot(width=.3,alpha=.1,aes(color=music_student))+
+  geom_jitter(alpha=.5,aes(color=music_student))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(Spreadsheet.Name~language_coded)
+
+longer_complete%>%
+  ggplot(aes(x=task,y=values))+
+  geom_line(aes(color=music_student,x=task,y=mean_values,group=Participant.Private.ID))+
+  #geom_jitter(alpha=.5,aes(color=music_student))+
+  geom_boxplot(alpha=.5,aes(color=music_student))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(language_coded~task_type)
 
 ```
