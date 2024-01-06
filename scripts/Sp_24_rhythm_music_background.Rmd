@@ -6,7 +6,9 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+library(conflicted)
 library(xml2)
+#detach("package:dplyr", unload = TRUE)
 library(dplyr)
 library(readr)
 library(tidyr)
@@ -20,6 +22,7 @@ library(GGally)
 library(corrplot)
 library(broom)
 library(performance)
+library(ltm)
 ```
 
 ```{r}
@@ -83,6 +86,11 @@ gs_data_agg<-
   pivot_wider(names_from = question_content,
               values_from = score,
               names_prefix = "gs_")
+
+#reliability test
+cronbach_alpha <- cronbach.alpha(gs_data_agg%>%select(gs_activeeng:gs_general))
+gs_cronbach_alpha<-cronbach_alpha
+print(gs_cronbach_alpha)
 ```
 
 ```{r}
@@ -155,6 +163,11 @@ met_d_prime<-met_data_clean%>%
   mutate(display=case_when(display == "Ritmo"~"Rhythm",
                            display == "Melodia"~"Melody"))%>%
   pivot_wider(names_from = display,values_from = c(MET_dprime, MET_c))
+
+#reliability test
+cronbach_alpha <- cronbach.alpha(met_data_agg%>%select(met_melody_scores:met_rhythm_scores))
+met_cronbach_alpha<-cronbach_alpha
+print(met_cronbach_alpha)
 ```
 
 ```{r}
@@ -243,6 +256,15 @@ save_ggplot(p1)
 data_rhythm_complete<-data_rhythm_complete%>%
   filter(Participant.Private.ID %in% part_rhythm_agg$Participant.Private.ID,
          sound_stimuli_list %in% item_rhythm_agg$sound_stimuli_list)
+
+
+cb_rhythm<-item_part_rhythm_agg%>%
+  select(sound_stimuli_list,Participant.Private.ID,accuracy)%>%
+  pivot_wider(names_from = sound_stimuli_list,values_from = accuracy)
+
+cronbach_alpha <- cronbach.alpha(cb_rhythm%>%select(`1.flac`:`9.flac`))
+rhythm_cronbach_alpha<-cronbach_alpha
+print(rhythm_cronbach_alpha)
 ```
 
 ```{r}
@@ -402,6 +424,14 @@ save_ggplot(p1)
 data_melody_full<-data_melody_full%>%
   filter(Participant.Private.ID %in% part_melody_agg$Participant.Private.ID,
          sound_stimuli_list %in% item_melody_agg$sound_stimuli_list)
+
+cb_melody<-item_part_melody_agg%>%
+  select(sound_stimuli_list,Participant.Private.ID,accuracy)%>%
+  pivot_wider(names_from = sound_stimuli_list,values_from = accuracy)
+
+cronbach_alpha <- cronbach.alpha(cb_melody%>%select(`1.flac`:`9.flac`))
+melody_cronbach_alpha<-cronbach_alpha
+print(melody_cronbach_alpha)
 ```
 
 
