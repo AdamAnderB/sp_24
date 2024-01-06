@@ -2,11 +2,14 @@
 title: "SP_24_rhythm_music_background"
 author: "Adam A. Bramlett"
 date: "2023-12-18"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 library(conflicted)
+conflicts_prefer("dplyr::select", "dplyr")
 library(xml2)
 #detach("package:dplyr", unload = TRUE)
 library(dplyr)
@@ -88,7 +91,7 @@ gs_data_agg<-
               names_prefix = "gs_")
 
 #reliability test
-cronbach_alpha <- cronbach.alpha(gs_data_agg%>%select(gs_activeeng:gs_general))
+cronbach_alpha <- cronbach.alpha(gs_data_agg%>%dplyr::select(gs_activeeng:gs_general))
 gs_cronbach_alpha<-cronbach_alpha
 print(gs_cronbach_alpha)
 ```
