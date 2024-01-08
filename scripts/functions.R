@@ -13,6 +13,18 @@ create_folder <- function(folder_name) {
   }
 }
 
+create_folder_same_level <- function(folder_name) {
+  # Construct the path to create the folder at the same level as the current directory
+  folder_path <- file.path(getwd(), folder_name)
+  
+  if (!dir.exists(folder_path)) {
+    dir.create(folder_path)
+    cat("Folder created:", folder_path, "\n")
+  } else {
+    cat("The folder", folder_path, "already exists.\n")
+  }
+}
+
 
 save_ggplot <- function(plot, title = NULL, visuals_folder_name = NULL, same_level = FALSE, width = 7, height = 4) {
   # Check for 'title' variable and set filename

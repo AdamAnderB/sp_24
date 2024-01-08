@@ -9,7 +9,6 @@ output:
 
 ```{r setup, include=FALSE}
 library(conflicted)
-conflicts_prefer("dplyr::select", "dplyr")
 library(xml2)
 #detach("package:dplyr", unload = TRUE)
 library(dplyr)
@@ -26,6 +25,7 @@ library(corrplot)
 library(broom)
 library(performance)
 library(ltm)
+library(purrr)
 ```
 
 ```{r}
@@ -100,7 +100,7 @@ print(gs_cronbach_alpha)
 #Musical ear clean up
 #removal of data by Median absolute deviation(mad)
 mad_standard=3
-before_mad_removal<-nrow(met_data)
+before_mad_removal_RTmet<-nrow(met_data)
 
 met_data_clean<-met_data %>%
   group_by(display)%>%
@@ -111,13 +111,9 @@ met_data_clean<-met_data %>%
          upper_mad = display_medians+(mean_distance*mad_standard),
          lower_mad = display_medians-(mean_distance*mad_standard))%>%
   filter(log_rt<upper_mad &log_rt>lower_mad)
-after_mad_removal<-nrow(met_data_clean)
 
-#points removed
-before_mad_removal-after_mad_removal
-#data kept
-removed_met_percent<-after_mad_removal/before_mad_removal
-removed_met_percent
+after_mad_removal_RTmet<-nrow(met_data_clean)
+
 
 #showing the data
 title="Musical Ear rhythm and melody distributions"
@@ -200,6 +196,8 @@ data_rhythm_complete<-data_rhythm_double
 
 #no items removed here.
 #item removal for each sound file
+before_mad_removal_item_rhythm<-length(unique(data_rhythm_complete$sound_stimuli_list))
+
 item_rhythm_agg<-data_rhythm_complete%>%
   group_by(sound_stimuli_list)%>%
   summarize(accuracy= mean(beats_correct))%>%
@@ -210,9 +208,12 @@ item_rhythm_agg<-data_rhythm_complete%>%
          upper_mad = display_medians+(mean_distance*mad_standard),
          lower_mad = display_medians-(mean_distance*mad_standard))%>%
   filter(accuracy<upper_mad &accuracy>lower_mad)
-  
+
+after_mad_removal_item_rhythm<-length(unique(item_rhythm_agg$sound_stimuli_list))
 #1 participants removed here.
 #participants removal
+before_mad_removal_part_rhythm<-length(unique(data_rhythm_complete$Participant.Private.ID))
+
 part_rhythm_agg<-data_rhythm_complete%>%
   group_by(Participant.Private.ID)%>%
   summarize(accuracy= mean(beats_correct))%>%
@@ -223,6 +224,8 @@ part_rhythm_agg<-data_rhythm_complete%>%
          upper_mad = display_medians+(mean_distance*mad_standard),
          lower_mad = display_medians-(mean_distance*mad_standard))%>%
   filter(accuracy<upper_mad &accuracy>lower_mad)
+
+after_mad_removal_part_rhythm<-length(unique(part_rhythm_agg$Participant.Private.ID))
 
 nrow(part_rhythm_agg)-length(unique(data_rhythm_complete$Participant.Private.ID))
 nrow(item_rhythm_agg)-length(unique(data_rhythm_complete$sound_stimuli_list))
@@ -307,7 +310,7 @@ data_rhythm_complete<-data_rhythm_complete%>%
 
 vlines <- data.frame(xintercepts = seq(200, 2400, by = 200))
 
-title<-"Correct and Incorrect distrubutions by beat across trial\n"
+title<-"Correct and Incorrect distrubutions by beat across trial"
 p1<-data_rhythm_complete%>%
   ggplot(aes(x = rt_adjusted, y = Name, group= interaction(as.factor(beats),as.factor(Name)),fill = as.factor(beats),show.legend = F))+
   geom_density_ridges(color="white",alpha=.5)+
@@ -355,6 +358,7 @@ cleaned_rhythm_agg<-data_rhythm_complete%>%
 #no items removed here.
 #item removal for each sound file
 data_melody_full<-melody_data
+before_mad_removal_item_melody<-length(unique(data_melody_full$sound_stimuli_list))
 
 item_melody_agg<-data_melody_full%>%
   group_by(sound_stimuli_list,Participant.Private.ID)%>%
@@ -378,9 +382,13 @@ item_melody_agg<-data_melody_full%>%
          upper_mad = display_medians+(mean_distance*mad_standard),
          lower_mad = display_medians-(mean_distance*mad_standard))%>%
   filter(accuracy<upper_mad &accuracy>lower_mad)
-  
+
+after_mad_removal_item_melody<-length(unique(item_melody_agg$sound_stimuli_list))
+
 #1 participants removed here.
 #participants removal
+before_mad_removal_part_melody<-length(unique(data_melody_full$Participant.Private.ID))
+
 part_melody_agg<-data_melody_full%>%
   group_by(Participant.Private.ID)%>%
   summarize(accuracy= mean(melody_correct))%>%
@@ -392,9 +400,10 @@ part_melody_agg<-data_melody_full%>%
          lower_mad = display_medians-(mean_distance*mad_standard))%>%
   filter(accuracy<upper_mad &accuracy>lower_mad)
 
+after_mad_removal_part_melody<-length(unique(part_melody_agg$Participant.Private.ID))
+
 nrow(part_melody_agg)-length(unique(data_melody_full$Participant.Private.ID))
 nrow(item_melody_agg)-length(unique(data_melody_full$sound_stimuli_list))
-
 #item and participant agg sheets for visualizations
 item_part_melody_agg<-data_melody_full%>%
   group_by(sound_stimuli_list,Participant.Private.ID)%>%
@@ -546,7 +555,20 @@ p1<-mij_data_agg_item%>%
 save_ggplot(p1)
 
 keep<-mij_data_agg_item%>%filter(remove==0)
+remove<-mij_data_agg_item%>%filter(remove==1)
 mij_data<-mij_data%>%filter(Sound1 %in% keep$Sound1)
+
+lang_items<-mij_data_agg_item%>%
+  group_by(Spreadsheet.Name)%>%
+  summarize(before=n())%>%
+  left_join(remove%>%
+              group_by(Spreadsheet.Name)%>%
+              summarize(remove=n()))
+            
+lang_items<-lang_items%>%
+  mutate(remove= ifelse(is.na(remove), 0, remove),
+         Statistic=Spreadsheet.Name)%>%
+  select(!Spreadsheet.Name)
 
 
 #Participant removal
@@ -574,7 +596,20 @@ p1<-mij_data_agg_part%>%
 save_ggplot(p1)
 
 keep<-mij_data_agg_part%>%filter(remove==0)
-mij_data<-mij_data%>%filter(Participant.Private.ID %in% keep$Participant.Private.ID)
+remove<-mij_data_agg_part%>%filter(remove==1)
+mij_data<-mij_data%>%
+  filter(Participant.Private.ID %in% keep$Participant.Private.ID)
+
+lang_parts<-mij_data_agg_part%>%
+  group_by(Participant.Private.ID)%>%
+  summarize(before=n())%>%
+  left_join(remove%>%
+              group_by(Participant.Private.ID)%>%
+              summarize(remove=n()))
+            
+lang_parts<-lang_parts%>%
+  mutate(remove= ifelse(is.na(remove), 0, remove))%>%
+  summarize(Statistic="particip_remove_lang",before=sum(before),remove=sum(remove))
 ```
 
 ```{r}
@@ -665,7 +700,7 @@ longer_all_data<-longer_all_data%>%
   arrange(number) %>%
   mutate(updated_tasks = factor(updated_terms, levels = unique(updated_terms)))
 
-title<-"Normalized score distrubutions by task connections\n"
+title<-"Normalized score distrubutions by task connections"
 p1<-longer_all_data%>%
   ggplot(aes(x=updated_tasks,y=values,color=music_coded))+
   geom_point(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),alpha=1,size=.14)+
@@ -682,7 +717,7 @@ p1<-longer_all_data%>%
   scale_x_discrete(limits=rev)
 save_ggplot(p1)
 
-title<-"Normalized score distrubutions by task\n"
+title<-"Normalized score distrubutions by task"
 p1<-longer_all_data%>%
   ggplot(aes(y=updated_tasks,x=values,group= interaction(as.factor(music_coded),as.factor(task)),fill = as.factor(music_coded),show.legend = F))+
   geom_density_ridges(color="white",alpha=.5)+
@@ -690,21 +725,21 @@ p1<-longer_all_data%>%
   scale_fill_manual(values =c("black", "red"))+
   scale_color_manual(values =c("black", "red"))+
   scale_y_discrete(limits=rev)+
-  labs(title = title, x = "normalized centered scores", y = "density", fill = "\n",alpha="") +
+  labs(x = "normalized centered scores", y = "density", fill = "\n",alpha="") +
   theme_minimal()+
-  theme(legend.position = c(.9, .8),
+  theme(legend.position = c(.5, .1),
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank())+
   facet_grid(.~l2_coded)
-save_ggplot(p1)
+save_ggplot(p1,width = 5.5,height=5.5)
 
 key<-longer_all_data%>%select(Participant.Private.ID,l2_coded,l1_coded,music_coded)
 mij_d_prime_keyed<-mij_d_prime%>%
   right_join(key)
 
-title<-"dprime density across tasks\n"
+title<-"dprime density across tasks"
 p1<-mij_d_prime_keyed%>%
   ggplot(aes(y=Spreadsheet.Name,x=language_dprime,group= interaction(as.factor(music_coded),as.factor(Spreadsheet.Name)),fill = as.factor(music_coded),show.legend = F))+
 geom_density_ridges(color="white",alpha=.5)+
@@ -721,12 +756,11 @@ geom_density_ridges(color="white",alpha=.5)+
         panel.grid.major.y = element_blank())+
   facet_grid(.~l2_coded)
 save_ggplot(p1)
-
 ```
 
 ```{r}
 #just for exploration
-title<-"dtasks connection students1\n"
+title<-"dtasks connection students1"
 p1<-longer_all_data%>%
   ggplot(aes(x=updated_tasks,y=values,color=music_coded,alpha=.2))+
   geom_boxplot(alpha=.01)+
@@ -742,7 +776,7 @@ p1<-longer_all_data%>%
   scale_x_discrete(limits=rev)
 save_ggplot(p1)
 
-title<-"dtasks connection students2\n"
+title<-"dtasks connection students2"
 p1<-longer_all_data%>%
   ggplot(aes(x=updated_tasks,y=values,color=music_coded,alpha=.2))+
   geom_boxplot(alpha=.1)+
@@ -758,7 +792,7 @@ p1<-longer_all_data%>%
   scale_x_discrete(limits=rev)
 save_ggplot(p1)
 
-title<-"dtasks connection students3\n"
+title<-"dtasks connection students3"
 p1<-longer_all_data%>%
   ggplot(aes(x=updated_tasks,y=values,color=music_coded))+
   geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name)),alpha=1,size=.08)+
@@ -773,7 +807,7 @@ p1<-longer_all_data%>%
   scale_x_discrete(limits=rev)
 save_ggplot(p1)
 
-title<-"dtasks connection students4\n"
+title<-"dtasks connection students4"
 p1<-longer_all_data%>%
   ggplot(aes(x=updated_tasks,y=values,color=music_coded))+
   geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name)),alpha=1,size=.08)+
@@ -1080,7 +1114,7 @@ p1<-all_models %>%
   theme(panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         panel.grid.major.y = element_blank(),
-        legend.position = c(.9, .3),
+        legend.position = c(.75, .3),
         legend.background = element_rect(fill="white",
                                   size=0.1, linetype="solid",
                                   colour ="black"))+
@@ -1094,5 +1128,88 @@ p2<-p1+guides(
     override.aes = aes(label = "")
   )
 )
-save_ggplot(p2)
+save_ggplot(p2,width = 5.5,height=5.5)
+```
+
+
+```{r}
+#csv output for dynamic writing in LaTex:
+#participant removal
+starting_participants<-nrow(data_list$Digit_Span__Advanced)
+kept_participants<-length(unique(all_data$Participant.Private.ID))
+removed_participants<-starting_participants-kept_participants
+
+keys <- c("starting_participants", "kept_participants", "removed_participants")
+values <- c(starting_participants, kept_participants, removed_participants)
+
+participant_removal <- data.frame(Statistic = keys, Value = values, stringsAsFactors = FALSE)
+
+#participant and item removal
+taskremoval <- lang_parts %>%
+  bind_rows(lang_items) %>%
+  mutate(after = before - remove)
+
+# Define a function to create a dataframe for a new row
+create_new_row <- function(Statistic, before, remove, after) {
+  data.frame(Statistic = as.character(Statistic), 
+             before = as.numeric(before), 
+             remove = as.numeric(remove), 
+             after = as.numeric(after))
+}
+
+# Create a list of new rows as dataframes
+new_rows <- list(
+  create_new_row("melody_item", before_mad_removal_item_melody, 
+                 before_mad_removal_item_melody - after_mad_removal_item_melody, 
+                 after_mad_removal_item_melody),
+  create_new_row("rhythm_item", before_mad_removal_item_rhythm, 
+                 before_mad_removal_item_rhythm - after_mad_removal_item_rhythm, 
+                 after_mad_removal_item_rhythm),
+  create_new_row("melody_part", before_mad_removal_part_melody, 
+                 before_mad_removal_part_melody - after_mad_removal_part_melody, 
+                 after_mad_removal_part_melody),
+  create_new_row("rhythm_part", before_mad_removal_part_rhythm, 
+                 before_mad_removal_part_rhythm - after_mad_removal_part_rhythm, 
+                 after_mad_removal_part_rhythm),
+  create_new_row("RTmet", before_mad_removal_RTmet, 
+                 before_mad_removal_RTmet - after_mad_removal_RTmet, 
+                 after_mad_removal_RTmet)
+)
+
+# Combine the existing dataframe with the new rows
+taskremoval <- do.call(rbind, c(list(taskremoval), new_rows))
+
+taskremoval_long<-taskremoval%>%
+  pivot_longer(col=c(before:after),names_to = "type",values_to = "Value")%>%
+  mutate(Statistic=paste(Statistic,type,sep="."))%>%
+  select(!type)
+
+#cronbachs alpha
+cronbach_list <- list(gs = gs_cronbach_alpha, 
+                      met = met_cronbach_alpha, 
+                      melody = melody_cronbach_alpha, 
+                      rhythm = rhythm_cronbach_alpha)
+
+# Extract the 'alpha' value from each and create a dataframe
+cronbachs_alpha_df <- data.frame(
+  Statistic = names(cronbach_list),
+  Value = sapply(cronbach_list, function(x) x$alpha)
+)
+
+dynamic_models<-all_models%>%
+  mutate(Statistic = paste(model,term,sep="."))%>%
+  select(Statistic,estimate,std.error,statistic,p.value,
+         conf_lower,conf_higher)%>%
+  na.omit()%>%
+  pivot_longer(cols=c(estimate:conf_higher),names_to="part",values_to="Value")%>%
+  mutate(Statistic=paste(Statistic,part,sep="."))%>%
+  select(!part)
+  
+
+
+
+write.csv(participant_removal, "data_ouputs/participant_removal.csv", row.names = FALSE)
+write.csv(taskremoval_long, "taskremoval.csv", row.names = FALSE)
+write.csv(cronbachs_alpha_df, "cronbach_alpha.csv", row.names = FALSE)
+write.csv(dynamic_models, "dynamic_models.csv", row.names = FALSE)
 ```
