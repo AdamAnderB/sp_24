@@ -1142,7 +1142,8 @@ removed_participants<-starting_participants-kept_participants
 keys <- c("starting_participants", "kept_participants", "removed_participants")
 values <- c(starting_participants, kept_participants, removed_participants)
 
-participant_removal <- data.frame(Statistic = keys, Value = values, stringsAsFactors = FALSE)
+participant_removal <- data.frame(Statistic = keys, Value = values, stringsAsFactors = FALSE)%>%
+  mutate(Value=round(Value,2))
 
 #participant and item removal
 taskremoval <- lang_parts %>%
@@ -1182,7 +1183,8 @@ taskremoval <- do.call(rbind, c(list(taskremoval), new_rows))
 taskremoval_long<-taskremoval%>%
   pivot_longer(col=c(before:after),names_to = "type",values_to = "Value")%>%
   mutate(Statistic=paste(Statistic,type,sep="."))%>%
-  select(!type)
+  select(!type)%>%
+  mutate(Value=round(Value,2))
 
 #cronbachs alpha
 cronbach_list <- list(gs = gs_cronbach_alpha, 
@@ -1194,7 +1196,8 @@ cronbach_list <- list(gs = gs_cronbach_alpha,
 cronbachs_alpha_df <- data.frame(
   Statistic = names(cronbach_list),
   Value = sapply(cronbach_list, function(x) x$alpha)
-)
+)%>%
+  mutate(Value=round(Value,2))
 
 dynamic_models<-all_models%>%
   mutate(Statistic = paste(model,term,sep="."))%>%
@@ -1203,13 +1206,12 @@ dynamic_models<-all_models%>%
   na.omit()%>%
   pivot_longer(cols=c(estimate:conf_higher),names_to="part",values_to="Value")%>%
   mutate(Statistic=paste(Statistic,part,sep="."))%>%
-  select(!part)
+  select(!part)%>%
+  mutate(Value=round(Value,2))
   
-
-
-
-write.csv(participant_removal, "data_ouputs/participant_removal.csv", row.names = FALSE)
-write.csv(taskremoval_long, "taskremoval.csv", row.names = FALSE)
-write.csv(cronbachs_alpha_df, "cronbach_alpha.csv", row.names = FALSE)
-write.csv(dynamic_models, "dynamic_models.csv", row.names = FALSE)
+create_folder_same_level("data_output")
+write.csv(participant_removal, "data_output/participant_removal.csv", row.names = FALSE)
+write.csv(taskremoval_long, "data_output/taskremoval.csv", row.names = FALSE)
+write.csv(cronbachs_alpha_df, "data_output/cronbach_alpha.csv", row.names = FALSE)
+write.csv(dynamic_models, "data_output/dynamic_models.csv", row.names = FALSE)
 ```

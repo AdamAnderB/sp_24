@@ -1,133 +1,133 @@
 "Statistic","Value"
-"Mandarin.(Intercept).estimate",2.92071835809239
-"Mandarin.(Intercept).std.error",0.657707771980283
-"Mandarin.(Intercept).statistic",4.44075390701016
-"Mandarin.(Intercept).p.value",7.17775357463699e-05
-"Mandarin.(Intercept).conf_lower",1.63161112501103
-"Mandarin.(Intercept).conf_higher",4.20982559117374
-"Italian.(Intercept).estimate",0.59083109184101
-"Italian.(Intercept).std.error",0.525575153960811
-"Italian.(Intercept).statistic",1.1241610022628
-"Italian.(Intercept).p.value",0.26704047727547
-"Italian.(Intercept).conf_lower",-0.43929620992218
-"Italian.(Intercept).conf_higher",1.6209583936042
-"Japanese.(Intercept).estimate",-0.591957763001623
-"Japanese.(Intercept).std.error",0.601359769587515
-"Japanese.(Intercept).statistic",-0.984365421397676
-"Japanese.(Intercept).p.value",0.330572783396995
-"Japanese.(Intercept).conf_lower",-1.77062291139315
-"Japanese.(Intercept).conf_higher",0.586707385389906
-"Mandarin.l2_codednon l2 match.estimate",0.258859702467153
-"Mandarin.l2_codednon l2 match.std.error",0.165076959897802
-"Mandarin.l2_codednon l2 match.statistic",1.56811527561091
-"Mandarin.l2_codednon l2 match.p.value",0.124933203386877
-"Mandarin.l2_codednon l2 match.conf_lower",-0.0646911389325392
-"Mandarin.l2_codednon l2 match.conf_higher",0.582410543866844
-"Japanese.l2_codednon l2 match.estimate",0.277109905106726
-"Japanese.l2_codednon l2 match.std.error",0.150195953904828
-"Japanese.l2_codednon l2 match.statistic",1.84498914852472
-"Japanese.l2_codednon l2 match.p.value",0.0720982037327261
-"Japanese.l2_codednon l2 match.conf_lower",-0.0172741645467366
-"Japanese.l2_codednon l2 match.conf_higher",0.571493974760189
-"Mandarin.music_codednon music.estimate",0.220648418042588
-"Mandarin.music_codednon music.std.error",0.170279340861706
-"Mandarin.music_codednon music.statistic",1.29580263187529
-"Mandarin.music_codednon music.p.value",0.202660373797099
-"Mandarin.music_codednon music.conf_lower",-0.113099090046355
-"Mandarin.music_codednon music.conf_higher",0.554395926131532
-"Mandarin.gs_general.estimate",0.504884232313528
-"Mandarin.gs_general.std.error",0.331948940738699
-"Mandarin.gs_general.statistic",1.52096955390184
-"Mandarin.gs_general.p.value",0.136334614489663
-"Mandarin.gs_general.conf_lower",-0.145735691534321
-"Mandarin.gs_general.conf_higher",1.15550415616138
-"Italian.gs_general.estimate",-0.850177441084497
-"Italian.gs_general.std.error",0.343694436618772
-"Italian.gs_general.statistic",-2.47364330202272
-"Italian.gs_general.p.value",0.0173051219650138
-"Italian.gs_general.conf_lower",-1.52381853685729
-"Italian.gs_general.conf_higher",-0.176536345311704
-"Mandarin.gs_activeeng.estimate",-0.447313654188854
-"Mandarin.gs_activeeng.std.error",0.285332731596097
-"Mandarin.gs_activeeng.statistic",-1.56769134647352
-"Mandarin.gs_activeeng.p.value",0.125032174324941
-"Mandarin.gs_activeeng.conf_lower",-1.00656580811721
-"Mandarin.gs_activeeng.conf_higher",0.111938499739496
-"Japanese.gs_activeeng.estimate",-0.584321700087278
-"Japanese.gs_activeeng.std.error",0.186669094396703
-"Japanese.gs_activeeng.statistic",-3.13025411076082
-"Japanese.gs_activeeng.p.value",0.00317398527232782
-"Japanese.gs_activeeng.conf_lower",-0.950193125104815
-"Japanese.gs_activeeng.conf_higher",-0.218450275069741
-"Mandarin.gs_perceptabil.estimate",-0.490761783430032
-"Mandarin.gs_perceptabil.std.error",0.278493483642382
-"Mandarin.gs_perceptabil.statistic",-1.76220203435793
-"Mandarin.gs_perceptabil.p.value",0.0858719548765416
-"Mandarin.gs_perceptabil.conf_lower",-1.0366090113691
-"Mandarin.gs_perceptabil.conf_higher",0.0550854445090361
-"Italian.gs_singingabil.estimate",0.56691796577022
-"Italian.gs_singingabil.std.error",0.304507711522292
-"Italian.gs_singingabil.statistic",1.86175240993435
-"Italian.gs_singingabil.p.value",0.0693256812631028
-"Italian.gs_singingabil.conf_lower",-0.0299171488134715
-"Italian.gs_singingabil.conf_higher",1.16375308035391
-"Japanese.gs_singingabil.estimate",0.389610163582787
-"Japanese.gs_singingabil.std.error",0.173003358414405
-"Japanese.gs_singingabil.statistic",2.25203815205443
-"Japanese.gs_singingabil.p.value",0.0296071131350788
-"Japanese.gs_singingabil.conf_lower",0.050523581090553
-"Japanese.gs_singingabil.conf_higher",0.728696746075021
-"Mandarin.gs_emotions.estimate",-0.603099776525528
-"Mandarin.gs_emotions.std.error",0.292127178100223
-"Mandarin.gs_emotions.statistic",-2.06451101348268
-"Mandarin.gs_emotions.p.value",0.0456647524052124
-"Mandarin.gs_emotions.conf_lower",-1.17566904560197
-"Mandarin.gs_emotions.conf_higher",-0.0305305074490911
-"Mandarin.MET_dprime_Melody.estimate",0.421297165195921
-"Mandarin.MET_dprime_Melody.std.error",0.190441807889437
-"Mandarin.MET_dprime_Melody.statistic",2.21220944006428
-"Mandarin.MET_dprime_Melody.p.value",0.0328770978118463
-"Mandarin.MET_dprime_Melody.conf_lower",0.0480312217326243
-"Mandarin.MET_dprime_Melody.conf_higher",0.794563108659218
-"Japanese.MET_dprime_Melody.estimate",-0.256300162098217
-"Japanese.MET_dprime_Melody.std.error",0.147756183531463
-"Japanese.MET_dprime_Melody.statistic",-1.73461547241196
-"Japanese.MET_dprime_Melody.p.value",0.0901434157326349
-"Japanese.MET_dprime_Melody.conf_lower",-0.545902281819884
-"Japanese.MET_dprime_Melody.conf_higher",0.0333019576234501
-"Italian.MET_dprime_Rhythm.estimate",0.0789577679946258
-"Italian.MET_dprime_Rhythm.std.error",0.187940692853274
-"Italian.MET_dprime_Rhythm.statistic",0.420120660384435
-"Italian.MET_dprime_Rhythm.p.value",0.676441903443239
-"Italian.MET_dprime_Rhythm.conf_lower",-0.289405989997791
-"Italian.MET_dprime_Rhythm.conf_higher",0.447321525987043
-"Mandarin.mean_working_memory.estimate",-0.105797902363813
-"Mandarin.mean_working_memory.std.error",0.101320671520697
-"Mandarin.mean_working_memory.statistic",-1.04418872058306
-"Mandarin.mean_working_memory.p.value",0.302827444162348
-"Mandarin.mean_working_memory.conf_lower",-0.304386418544379
-"Mandarin.mean_working_memory.conf_higher",0.0927906138167533
-"Italian.mean_working_memory.estimate",0.265367905357461
-"Italian.mean_working_memory.std.error",0.103183974498153
-"Italian.mean_working_memory.statistic",2.57179379499684
-"Italian.mean_working_memory.p.value",0.01357181982304
-"Italian.mean_working_memory.conf_lower",0.0631273153410817
-"Italian.mean_working_memory.conf_higher",0.46760849537384
-"Japanese.mean_working_memory.estimate",0.28556398604913
-"Japanese.mean_working_memory.std.error",0.095976635332616
-"Japanese.mean_working_memory.statistic",2.97534900092591
-"Japanese.mean_working_memory.p.value",0.00483661367887818
-"Japanese.mean_working_memory.conf_lower",0.0974497807972023
-"Japanese.mean_working_memory.conf_higher",0.473678191301057
-"Japanese.beat_score.estimate",1.4169974206272
-"Japanese.beat_score.std.error",0.422878567069705
-"Japanese.beat_score.statistic",3.35083764222467
-"Japanese.beat_score.p.value",0.00171212199114233
-"Japanese.beat_score.conf_lower",0.588155429170574
-"Japanese.beat_score.conf_higher",2.24583941208382
-"Mandarin.melody_score.estimate",0.462603825931018
-"Mandarin.melody_score.std.error",0.343817295029442
-"Mandarin.melody_score.statistic",1.34549318088086
-"Mandarin.melody_score.p.value",0.186237072897849
-"Mandarin.melody_score.conf_lower",-0.211278072326689
-"Mandarin.melody_score.conf_higher",1.13648572418873
+"Mandarin.(Intercept).estimate",2.92
+"Mandarin.(Intercept).std.error",0.66
+"Mandarin.(Intercept).statistic",4.44
+"Mandarin.(Intercept).p.value",0
+"Mandarin.(Intercept).conf_lower",1.63
+"Mandarin.(Intercept).conf_higher",4.21
+"Italian.(Intercept).estimate",0.59
+"Italian.(Intercept).std.error",0.53
+"Italian.(Intercept).statistic",1.12
+"Italian.(Intercept).p.value",0.27
+"Italian.(Intercept).conf_lower",-0.44
+"Italian.(Intercept).conf_higher",1.62
+"Japanese.(Intercept).estimate",-0.59
+"Japanese.(Intercept).std.error",0.6
+"Japanese.(Intercept).statistic",-0.98
+"Japanese.(Intercept).p.value",0.33
+"Japanese.(Intercept).conf_lower",-1.77
+"Japanese.(Intercept).conf_higher",0.59
+"Mandarin.l2_codednon l2 match.estimate",0.26
+"Mandarin.l2_codednon l2 match.std.error",0.17
+"Mandarin.l2_codednon l2 match.statistic",1.57
+"Mandarin.l2_codednon l2 match.p.value",0.12
+"Mandarin.l2_codednon l2 match.conf_lower",-0.06
+"Mandarin.l2_codednon l2 match.conf_higher",0.58
+"Japanese.l2_codednon l2 match.estimate",0.28
+"Japanese.l2_codednon l2 match.std.error",0.15
+"Japanese.l2_codednon l2 match.statistic",1.84
+"Japanese.l2_codednon l2 match.p.value",0.07
+"Japanese.l2_codednon l2 match.conf_lower",-0.02
+"Japanese.l2_codednon l2 match.conf_higher",0.57
+"Mandarin.music_codednon music.estimate",0.22
+"Mandarin.music_codednon music.std.error",0.17
+"Mandarin.music_codednon music.statistic",1.3
+"Mandarin.music_codednon music.p.value",0.2
+"Mandarin.music_codednon music.conf_lower",-0.11
+"Mandarin.music_codednon music.conf_higher",0.55
+"Mandarin.gs_general.estimate",0.5
+"Mandarin.gs_general.std.error",0.33
+"Mandarin.gs_general.statistic",1.52
+"Mandarin.gs_general.p.value",0.14
+"Mandarin.gs_general.conf_lower",-0.15
+"Mandarin.gs_general.conf_higher",1.16
+"Italian.gs_general.estimate",-0.85
+"Italian.gs_general.std.error",0.34
+"Italian.gs_general.statistic",-2.47
+"Italian.gs_general.p.value",0.02
+"Italian.gs_general.conf_lower",-1.52
+"Italian.gs_general.conf_higher",-0.18
+"Mandarin.gs_activeeng.estimate",-0.45
+"Mandarin.gs_activeeng.std.error",0.29
+"Mandarin.gs_activeeng.statistic",-1.57
+"Mandarin.gs_activeeng.p.value",0.13
+"Mandarin.gs_activeeng.conf_lower",-1.01
+"Mandarin.gs_activeeng.conf_higher",0.11
+"Japanese.gs_activeeng.estimate",-0.58
+"Japanese.gs_activeeng.std.error",0.19
+"Japanese.gs_activeeng.statistic",-3.13
+"Japanese.gs_activeeng.p.value",0
+"Japanese.gs_activeeng.conf_lower",-0.95
+"Japanese.gs_activeeng.conf_higher",-0.22
+"Mandarin.gs_perceptabil.estimate",-0.49
+"Mandarin.gs_perceptabil.std.error",0.28
+"Mandarin.gs_perceptabil.statistic",-1.76
+"Mandarin.gs_perceptabil.p.value",0.09
+"Mandarin.gs_perceptabil.conf_lower",-1.04
+"Mandarin.gs_perceptabil.conf_higher",0.06
+"Italian.gs_singingabil.estimate",0.57
+"Italian.gs_singingabil.std.error",0.3
+"Italian.gs_singingabil.statistic",1.86
+"Italian.gs_singingabil.p.value",0.07
+"Italian.gs_singingabil.conf_lower",-0.03
+"Italian.gs_singingabil.conf_higher",1.16
+"Japanese.gs_singingabil.estimate",0.39
+"Japanese.gs_singingabil.std.error",0.17
+"Japanese.gs_singingabil.statistic",2.25
+"Japanese.gs_singingabil.p.value",0.03
+"Japanese.gs_singingabil.conf_lower",0.05
+"Japanese.gs_singingabil.conf_higher",0.73
+"Mandarin.gs_emotions.estimate",-0.6
+"Mandarin.gs_emotions.std.error",0.29
+"Mandarin.gs_emotions.statistic",-2.06
+"Mandarin.gs_emotions.p.value",0.05
+"Mandarin.gs_emotions.conf_lower",-1.18
+"Mandarin.gs_emotions.conf_higher",-0.03
+"Mandarin.MET_dprime_Melody.estimate",0.42
+"Mandarin.MET_dprime_Melody.std.error",0.19
+"Mandarin.MET_dprime_Melody.statistic",2.21
+"Mandarin.MET_dprime_Melody.p.value",0.03
+"Mandarin.MET_dprime_Melody.conf_lower",0.05
+"Mandarin.MET_dprime_Melody.conf_higher",0.79
+"Japanese.MET_dprime_Melody.estimate",-0.26
+"Japanese.MET_dprime_Melody.std.error",0.15
+"Japanese.MET_dprime_Melody.statistic",-1.73
+"Japanese.MET_dprime_Melody.p.value",0.09
+"Japanese.MET_dprime_Melody.conf_lower",-0.55
+"Japanese.MET_dprime_Melody.conf_higher",0.03
+"Italian.MET_dprime_Rhythm.estimate",0.08
+"Italian.MET_dprime_Rhythm.std.error",0.19
+"Italian.MET_dprime_Rhythm.statistic",0.42
+"Italian.MET_dprime_Rhythm.p.value",0.68
+"Italian.MET_dprime_Rhythm.conf_lower",-0.29
+"Italian.MET_dprime_Rhythm.conf_higher",0.45
+"Mandarin.mean_working_memory.estimate",-0.11
+"Mandarin.mean_working_memory.std.error",0.1
+"Mandarin.mean_working_memory.statistic",-1.04
+"Mandarin.mean_working_memory.p.value",0.3
+"Mandarin.mean_working_memory.conf_lower",-0.3
+"Mandarin.mean_working_memory.conf_higher",0.09
+"Italian.mean_working_memory.estimate",0.27
+"Italian.mean_working_memory.std.error",0.1
+"Italian.mean_working_memory.statistic",2.57
+"Italian.mean_working_memory.p.value",0.01
+"Italian.mean_working_memory.conf_lower",0.06
+"Italian.mean_working_memory.conf_higher",0.47
+"Japanese.mean_working_memory.estimate",0.29
+"Japanese.mean_working_memory.std.error",0.1
+"Japanese.mean_working_memory.statistic",2.98
+"Japanese.mean_working_memory.p.value",0
+"Japanese.mean_working_memory.conf_lower",0.1
+"Japanese.mean_working_memory.conf_higher",0.47
+"Japanese.beat_score.estimate",1.42
+"Japanese.beat_score.std.error",0.42
+"Japanese.beat_score.statistic",3.35
+"Japanese.beat_score.p.value",0
+"Japanese.beat_score.conf_lower",0.59
+"Japanese.beat_score.conf_higher",2.25
+"Mandarin.melody_score.estimate",0.46
+"Mandarin.melody_score.std.error",0.34
+"Mandarin.melody_score.statistic",1.35
+"Mandarin.melody_score.p.value",0.19
+"Mandarin.melody_score.conf_lower",-0.21
+"Mandarin.melody_score.conf_higher",1.14
