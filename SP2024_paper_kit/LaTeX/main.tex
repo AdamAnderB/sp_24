@@ -3,7 +3,10 @@
 \usepackage{INTERSPEECH2021}
 \usepackage{subfiles}
 \usepackage{datatool}
-\DTLloaddb{mydata}{scripts/dynamic_latex.csv}
+\DTLloaddb{cronbach}{scripts/data_output/cronbach_alpha.csv}
+\DTLloaddb{modelsouts}{scripts/data_output/dynamic_models.csv}
+\DTLloaddb{partrem}{scripts/data_output/participant_removal.csv}
+\DTLloaddb{taskrem}{scripts/data_output/taskremoval.csv}
 
 \newcommand{\livedata}[2]{%
     \DTLfetch{#1}{Statistic}{#2}{Value}%
@@ -35,14 +38,18 @@ The dynamics of non-native speech perception remain poorly understood, especiall
 \section{Introduction}
 awesome text
 
-This is how many participants we started with:
-\livedata{mydata}{starting_participants}
+This is gs alpha
+\livedata{cronbach}{gs}
 
-This is how many participants we ended with:
-\livedata{mydata}{kept_participants}
+This is the mandarin model out
+\livedata{modelsouts}{Mandarin.(Intercept).estimate}
 
-This is how many participants we removed:
-\livedata{mydata}{removed_participants}
+This is how many participants we removed lang removal:
+\livedata{taskrem}{part_remove_lang.before}
+
+This is how many participants we kept:
+\livedata{partrem}{kept_participants}
+
 
 \section{Outline}
 \subfile{outline.tex}
