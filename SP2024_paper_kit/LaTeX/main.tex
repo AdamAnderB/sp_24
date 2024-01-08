@@ -2,6 +2,12 @@
 
 \usepackage{INTERSPEECH2021}
 \usepackage{subfiles}
+\usepackage{datatool}
+\DTLloaddb{mydata}{scripts/dynamic_latex.csv}
+
+\newcommand{\livedata}[2]{%
+    \DTLfetch{#1}{Statistic}{#2}{Value}%
+}
 
 \title{Measuring music and prosody: accounting for variation in non-native speech discrimination with L1, L2, music skills, and working memory}
 %Paper submission must be anonymous. Only fill in author information for the final PDF.
@@ -28,6 +34,15 @@ The dynamics of non-native speech perception remain poorly understood, especiall
 
 \section{Introduction}
 awesome text
+
+This is how many participants we started with:
+\livedata{mydata}{starting_participants}
+
+This is how many participants we ended with:
+\livedata{mydata}{kept_participants}
+
+This is how many participants we removed:
+\livedata{mydata}{removed_participants}
 
 \section{Outline}
 \subfile{outline.tex}
