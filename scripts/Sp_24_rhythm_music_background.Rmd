@@ -1134,6 +1134,7 @@ save_ggplot(p2,width = 5.5,height=5.5)
 
 ```{r}
 #csv output for dynamic writing in LaTex:
+
 #participant removal
 starting_participants<-nrow(data_list$Digit_Span__Advanced)
 kept_participants<-length(unique(all_data$Participant.Private.ID))
@@ -1145,6 +1146,41 @@ values <- c(starting_participants, kept_participants, removed_participants)
 participant_removal <- data.frame(Statistic = keys, Value = values, stringsAsFactors = FALSE)%>%
   mutate(Value=round(Value,2))
 
+#kept participant by experiment
+kept_participants_each_exp<-all_data%>%
+  select(Participant.Private.ID,experiment)%>%
+  unique()%>%
+  group_by(experiment)%>%
+  summarise(Value = n(),
+            Statistic = paste(experiment,".after"))%>%
+  unique()%>%
+  ungroup()%>%
+  select(-experiment)
+
+#all participant by experiment
+all_participants_each_exp<-met_data%>%
+  select(Participant.Private.ID,experiment)%>%
+  unique()%>%
+  group_by(experiment)%>%
+  summarise(Value = n(),
+            Statistic = paste(experiment,".before"))%>%
+  unique()%>%
+  ungroup()%>%
+  select(-experiment)
+
+#participant age
+age<-all_data%>%
+  select(Participant.Private.ID,age)%>%
+  unique()%>%
+  summarize(mean_age=mean(as.numeric(age)),
+            sd_age=sd(as.numeric(age)))%>%
+  pivot_longer(cols=everything(),names_to = "Statistic",values_to = "Value")
+
+participant_removal<-participant_removal%>%
+  bind_rows(kept_participants_each_exp)%>%
+  bind_rows(all_participants_each_exp)%>%
+  bind_rows(age)
+  
 #participant and item removal
 taskremoval <- lang_parts %>%
   bind_rows(lang_items) %>%
