@@ -6,6 +6,7 @@
 \usepackage{fmtcount}
 \usepackage{xstring}
 \usepackage{substr} % Include this in your preamble
+\usepackage{tipa}
 \DTLloaddb{cronbach}{scripts/data_output/cronbach_alpha.csv}
 \DTLloaddb{modelsouts}{scripts/data_output/dynamic_models.csv}
 \DTLloaddb{partrem}{scripts/data_output/participant_removal.csv}
@@ -64,6 +65,35 @@ This is how many participants we started with for the cmu data:
 
 This is how many participants we kept for the cmu data:
 \livedata{partrem}{data_exp_141883-v12 .after}
+This is gs alpha
+\livedata{cronbach}{gs}
+
+this is item removal for italian task:
+\livedata{taskrem}{italian.remove}
+
+this is participants removal for language task:
+\livedata{taskrem}{particip_remove_lang.remove}
+
+This is the mandarin model out:
+\livedata{modelsouts}{Mandarin.(Intercept).estimate}
+
+This is how many participants we removed lang removal:
+\livedata{taskrem}{part_remove_lang.before}
+
+This is how many participants we kept:
+\livedata{partrem}{kept_participants}
+
+This is how many participants we started with for the cmu data:
+\livedata{partrem}{data_exp_141883-v12 .before}
+
+This is how many participants we kept for the cmu data:
+\livedata{partrem}{data_exp_141883-v12 .after}
+
+This is how many participants we started with for the cmu data:
+\livedata{partrem}{data_exp_141883-v12 .before}
+
+This is how many participants we kept for the cmu data:
+\livedata{partrem}{data_exp_141883-v12 .after}
 
 \section{Outline}
 \subfile{outline.tex}
@@ -71,19 +101,34 @@ This is how many participants we kept for the cmu data:
 \section{methods}
 
 \subsubsection{participants}
- The recruitment of \livedata{partrem}{starting_participants} participants was managed through Prolific \cite{Palan_2018} (n=\livedata{partrem}{data_exp_142778-v2.before})  and in-person recruitment (n=\livedata{partrem}{data_exp_141883-v12.before}). Not included in this, 22 participants were rejected from participation due to failing initial requirements (i.e., eight removed for failed headphone-check \cite{milne_2021} and 14 removed for eye-tracking calibration failure, which is not reported here). Of the \livedata{partrem}{starting_participants} participants who participated in the study, \livedata{partrem}{removed_participants} were removed for low accuracy scores. Three median absolute deviations (MAD) was used as the standard for removal to maximize retained participants \cite{Leys_2013}. Of these, \livedata{taskrem}{particip_remove_lang.remove} were removed for being below MAD range in the language tasks and \livedata{taskrem}{rhythm_part.remove} removed for low performance in auditory-motor integration task.  After removal, \livedata{partrem}{kept_participants} participants \livedata{partrem}{part_mean} data were retained for analysis. 
+ The recruitment of \livedata{partrem}{starting_participants} participants was managed through Prolific \cite{Palan_2018} (n=\livedata{partrem}{data_exp_142778-v2.before})  and in-person (n=\livedata{partrem}{data_exp_141883-v12.before}) recruitment. Additionally, 22 potentional participants were rejected from participation due to failing initial requirements (i.e., eight removed for failed headphone-check \cite{milne_2021} and 14 removed for eye-tracking calibration failure, which is not reported here). To ensure data quality and maximize retained participants, three median absolute deviations (MAD) from median score was calculated as the standard for removal for each task \cite{Leys_2013}. Of the \livedata{partrem}{starting_participants} participants who remained, \livedata{partrem}{removed_participants} were removed for low accuracy scores. Of these, \livedata{taskrem}{particip_remove_lang.remove} were removed for being below MAD range in the language tasks and \livedata{taskrem}{rhythm_part.remove} removed for low performance in auditory-motor integration task.  After removal, \livedata{partrem}{kept_participants} participants (age: $\mu$ = \livedata{partrem}{mean_age}, $\sigma$ = \livedata{partrem}{sd_age}) data were retained for analysis. 
+
+\subsubsection{procedure}
+All of the participants took part in a multi-stage battery of language, music, and domain general tasks. Participants first took part in a two-part headphone check, an aural attention check and a dichotic-pitch task \cite{milne_2021}, followed by an 8 trial adaptive staircase digit-span task. After completing the head-phone check and digit-span tasks,
+all participants took part in either music or language segments, followed by the complementary segment (i.e., music $\rightarrow$ language, language $\rightarrow$ music). For all language and music tasks, stimuli and experimental design were adapted and built in Gorilla \cite{gorilla_Anwyl-Irvine_2019} for the current study from previous in-person studies (e.g., Mandarin \cite{Wiener_Bradley_2020}) that either made materials openly available on OSF \cite{OSF} or were provided by the original authors. 
+
+In the language segment, participants took part in three speeded AX-discrimination tasks for Italian, Japanese, and Mandarin.All Language stimuli were sampled at 44.1 kHz and recorded in sound attenuated booths (Mandarin) or studio (Japanese and Italian). The Italian and Japanese AX tasks, adapted from \cite{Tsukada_Cox_Hajek_Hirata_2017}, consisted of stop geminate contrasts: Italian - /\textipa{p t k b d g dZ}/, Japanese - /\textipa{t k tS}/. For the Italian AX task, stimuli consisted of 27 pairs of geminate contrasts (e.g., without geminate /\textipa{Eko}/ \textit{echo}, with geminate /\textipa{Ek\textlengthmark o}/ \textit{here}), which were made up of approximately half real and non-real words, spoken by three native speakers. For the Japanese AX task, stimuli consisted of 33 pairs of geminate contrasts (e.g., without geminate: /kate/ \textit{win}, with geminate: /katːe/ \textit{buying}), with approximately half of the pairs matching (e.g., without geminate high-low pitch accent /kate/, with geminate low-high pitch accent /katːe/) and mismatching (without geminate low-high pitch accent /heta/ \textit{unskilled}, without geminate low-high pitch accent /hetːa/ \textit{decreased}) in pitch-accent. The Mandarin task, adpated from \cite{Wiener_Bradley_2020}, consisted of 8 stimuli based on the Mandarin syllable yu with four tones (yu1, yu2, yu3, yu4) recorded by male and female native speakers and were normalized for F0 manipulation using \cite{Boersma_Weenink}'s method. Each tonal pairing co-occured equal amounts with each tone occurring with itself three times to equalize match-mismatch answers across the task. 
+
+The music segment has two basic tasks: auditory-motor temporal integration \cite{Kachlicka_Saito_Tierney_2019} and auditory discrimination \cite[MET;]{Wallentin_Nielsen_Friis-Olivarius_Vuust_Vuust_2010}), both of which have melody and rhythm sections. In the auditory-motor integration tasks, participants hear a rhythm (auditory-motor rhythm) or melody(auditory-motor rhythm) three times, memorizes it, and reproduces either the melodic and rhythmic pattern. For example, in the auditory-motor rhythm task each trial plays a 13 beat rhythm three times. The participant then needs needs to repeat the exact beat using the space-bar. Timing is captured on each space-bar press. 
+
+For example, in the rhythm 
 
 
-As in Porretta et al. (2020), participants were asked
-to estimate their total lifetime experience interacting with accented Chinese speakers
-(as a percentage of their lifetime interactions). The resulting 49 participants’ reported
-amount of Chinese accent experience (range= 0-100 M = 10.47% (SD = 14.13), was
-right skewed. Following Porretta et al. (2020), log transformation (with a constant of 1)
-and a prior scaling to 0-30 range was employed (range = 0-3.43, M = 0.99, SD = 0.92).
+After completing the music and language segments, participants then fill in both a music sophisitication survey \cite[Gold-MSI;]{Müllensiefen_Gingras_Musil_Stewart_2014} and a Language background survey. The Gold-MSI is a self-reported survey, which aims to capture individual differences through musical sophistication in 5 areas: Active Musical Engagement e.g., time and money resources spent on music; Self-reported Perceptual Abilities, e.g., musical listening skills
+Musical Training; e.g. formal musical training
+Self-reported Singing Abilities, e.g. one’s own singing; Emotional Engagement with Music, e.g. ability to talk about emotions in music). 
 
 \subsection{Figures}
 
 stuff here Figure~\ref{fig:raw_data}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{SP_24_visuals/Normalized_score_distrubutions_by_task.pdf}
+  \caption{Raw data}
+  \label{fig:raw_data}
+\end{figure}
+
 
 \begin{figure}[t]
   \centering
