@@ -1179,7 +1179,8 @@ age<-all_data%>%
 participant_removal<-participant_removal%>%
   bind_rows(kept_participants_each_exp)%>%
   bind_rows(all_participants_each_exp)%>%
-  bind_rows(age)
+  bind_rows(age)%>%
+  mutate(Value=round(Value,2))
   
 #participant and item removal
 taskremoval <- lang_parts %>%
