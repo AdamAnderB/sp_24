@@ -793,7 +793,8 @@ tester<-longer_all_data%>%
                                      Spreadsheet.Name=="japanese" & Language == "japanese"~"match",
                                      Spreadsheet.Name=="Mandarin" & Language != "Mandarin Chinese"~"no match",
                                      Spreadsheet.Name=="italian" & Language != "Italian"~"no match",
-                                     Spreadsheet.Name=="japanese" & Language != "japanese"~"no match",))
+                                     Spreadsheet.Name=="japanese" & Language != "japanese"~"no match",))%>%
+  mutate(ratings = factor(ratings, levels = c("Basic", "Average","Higher than average")))
   
 
 title="by gs"
@@ -890,82 +891,87 @@ save_ggplot(p1)
 ```
 
 
-```{r}
+````{r}
 #just for exploration
 title<-"dtasks connection students1"
-p1<-longer_all_data%>%
-    ggplot(aes(x=updated_tasks,y=values,color=music_coded))+
-  geom_point(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),
-             alpha=1,size=.14)+
-  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),
-            alpha=.2,size=.15)+
-  geom_boxplot(aes(fill=music_coded),color="white",alpha=.4,width=.5)+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  scale_color_manual(values = c("black", "red"))+
-  scale_fill_manual(values = c("black", "red"))+
-  facet_wrap(.~Spreadsheet.Name)+
-  scale_color_manual(values = c("black", "red"))+
+
+pd <- position_dodge(0.4)
+p1 <- tester %>%
+  ggplot(aes(x = updated_tasks, y = values, color = ratings)) +
+  geom_line(position = pd,aes(group = interaction(Participant.Private.ID, ratings,Spreadsheet.Name)), 
+            alpha = 1, size = .3) +
+  geom_point(position = pd,size = 1.3, shape = 21, fill = "white", show.legend = TRUE) +  # Adjusted geom_point
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(color = "Goldsmiths General \n Score-rankings")+
   theme(panel.grid.major.y = element_blank(),
         panel.grid.minor.y = element_blank(),
-        panel.grid.minor.x = element_blank())+
-  coord_flip()+
-  scale_x_discrete(limits=rev)
-save_ggplot(p1)
-
-
-title<-"dtasks connection students2"
-p1<-longer_all_data%>%
-  ggplot(aes(x=updated_tasks,y=values,color=music_coded,alpha=.2))+
-  geom_point(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),
-            alpha=1,size=.14)+
-  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),
-            alpha=.2,size=.5)+
-  geom_boxplot(aes(fill=music_coded),color="white",alpha=.4,width=.5)+
-  theme_minimal()+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  scale_color_manual(values = c("black", "red"))+
-  scale_fill_manual(values = c("black", "red"))+
-  facet_wrap(l2_coded~Spreadsheet.Name)+
-  scale_color_manual(values = c("black", "red"))+
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        panel.grid.minor.x = element_blank())+
-  coord_flip()+
-  scale_x_discrete(limits=rev)
-save_ggplot(p1)
-
-title<-"dtasks connection students3"
-p1<-longer_all_data%>%
-  ggplot(aes(x=updated_tasks,y=values,color=music_coded))+
-  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name)),alpha=1,size=.08)+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  facet_grid(.~l2_coded)+
-  scale_color_manual(values = c("black", "red"))+
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        panel.grid.minor.x = element_blank())+
-  coord_flip()+
-  scale_x_discrete(limits=rev)
-save_ggplot(p1)
-
-title<-"dtasks connection students4"
-p1<-longer_all_data%>%
-  ggplot(aes(x=updated_tasks,y=values,color=music_coded))+
-  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name)),alpha=1,size=.08)+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  facet_grid(Spreadsheet.Name~l2_coded)+
-  scale_color_manual(values = c("black", "red"))+
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        panel.grid.minor.x = element_blank())+
-  coord_flip()+
-  scale_x_discrete(limits=rev)
-save_ggplot(p1)
+        panel.grid.minor.x = element_blank(),
+        strip.text.x = element_blank(),
+        legend.position = c(.25, .35),     # Move the legend to the bottom
+        legend.direction = "vertical") +
+  coord_flip() +
+  scale_color_manual(values = c("#800080", "#008000", "#FFA500"))+
+  scale_x_discrete(limits = rev) +
+  xlab("") +
+  ylab("Normalized and Centered on zero values")
+save_ggplot(p1,width = 6,height = 8)
 ```
+```{r}
+title="by gs"
+p1 <- tester %>%
+  ggplot(aes(x = updated_tasks, y = values, color = ratings)) +
+  geom_line(aes(group = interaction(Participant.Private.ID, Spreadsheet.Name, color = ratings)), alpha = .3, size = .3) +
+  geom_point(size = 5, shape = 21, color = NA, show.legend = TRUE) +  # Adjusted geom_point
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  facet_grid(.~Spreadsheet.Name) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position = "none",
+        strip.text.x = element_blank(),
+        plot.margin = margin(-.2, 0, 0, 0, "cm")) +
+  coord_flip() +
+  scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
+  scale_x_discrete(limits = rev) +
+  xlab("") +
+  ylab("Normalized and Centered on zero values") +
+  guides(color = guide_legend(override.aes = list(shape = 21, size = 5)))  # Adjusted guides
+
+density_data<-tester%>%
+  select(Spreadsheet.Name,updated_tasks,ratings,values)%>%
+  filter(updated_tasks == "Language d'")
+
+density_plot <- 
+  ggplot(density_data, aes(values, fill = ratings)) + 
+    geom_density(color = "white",alpha=.3) +
+    theme_void() +
+    labs(fill = "GoldSmiths General Rankings")+
+    theme(legend.position = "top",
+        plot.margin = margin(0, 0, 0, 0, "cm"))+
+    facet_grid(.~Spreadsheet.Name, labeller = labeller(Spreadsheet.Name = c(italian = "Italian", japanese = "Japanese", Mandarin = "Mandarin")))+
+    scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
+    scale_fill_manual(values = c("#800080", "#008000", "#FFA500")) 
+
+empty_plot <- ggplot() + 
+              theme_void() + 
+              theme(plot.background = element_blank())
+
+combined_plot <- plot_grid(
+  plot_grid(empty_plot, density_plot, ncol = 2, rel_widths = c(3.5, 12)),  # Adjust 1 and 4 for the spacer and plot width
+  p1,
+  ncol = 1,
+  rel_heights = c(1, 4)  # Adjust for relative heights
+)
+
+combined_plot
+save_ggplot(combined_plot,width=7,height=4)
+
+
+
+```
+
 
 ```{r}
 #prep for models
@@ -1185,11 +1191,13 @@ anova(j_data_m4,j_data_m5)
 #model 4 is the parsimonious model
 j_model<-j_data_m4
 ```
+
 ```{r}
 check_model(m_model)
 check_model(i_data_m5)
 check_model(j_model)
 ```
+
 ```{r}
 #full model
 m_model_form <- tidy(m_data_m1)%>%
@@ -1246,9 +1254,9 @@ all_models<-all_models%>%
 title="Japanese,Italian, Mandarin max models structure: parsimonious effects"
 p1<-all_models %>%
   ggplot(aes(x = updated_terms, y = estimate, color = model)) +
-  geom_point(position = dodge_width,shape=19) +
+  geom_point(position = dodge_width,shape=19,size=3) +
   geom_text(aes(label=significance,y=-2),position=dodge_width,width = 0.1,size=5,show_guide=F)+
-  geom_errorbar(aes(ymin = conf_lower, ymax = conf_higher), position = dodge_width, width = 0.1) +
+  geom_errorbar(aes(ymin = conf_lower, ymax = conf_higher), position = dodge_width, width = 0.1,linewidth=1.5) +
   scale_x_discrete(limits=rev)+
   coord_flip() + 
   theme_minimal() +
@@ -1259,13 +1267,14 @@ p1<-all_models %>%
         panel.grid.major.x = element_blank(),
         panel.grid.major.y = element_blank(),
         legend.position = c(.75, .3),
-        legend.background = element_rect(fill="white",
-                                  size=0.1, linetype="solid",
+        legend.background = element_rect(fill="#E0E0E0",
+                                  size=0, linetype="solid",
                                   colour ="black"))+
   geom_vline(xintercept=seq(1.5, length(unique(all_models$term))-0.5, 1), 
              lwd=.1, colour="black")+
-  geom_hline(yintercept=0,lwd=.1, colour="black")
-
+  geom_hline(yintercept=0,lwd=.1, colour="black")+
+  scale_color_manual(values = c("#C41230", "#000000", "#719F94")) 
+p1
 p2<-p1+guides(
   fill = guide_legend(
     title = "Legend Title",
