@@ -26,6 +26,7 @@ library(broom)
 library(performance)
 library(ltm)
 library(purrr)
+library(cowplot)
 ```
 
 ```{r}
@@ -43,6 +44,7 @@ data_list <- readRDS(file.path(master_path,"rds_folder","all_experiments_combine
 ```{r}
 #gold smith
 gs_data<-data_list$Goldsmiths_Musical_Sophistication_Index_GoldMSI__Original_Version_English
+gs_data%>%ggplot(aes(x=score,fill=rating,alpha=.1))+geom_histogram(position = "identity")
 #music ear test
 met_data<-data_list$Musical_Ear_Test_MET__English_Instructions
 #rhythm data
@@ -62,6 +64,7 @@ quests<-data_list$Language_experience_questionnaire
 #participant info no longer appicable because of the non-cmu students don't have this:
 part_info<-data_list$participant_info
 part_info$Participant.Private.ID<-as.character(part_info$Participant.Private.ID)
+View(part_info)
 ```
 
 ```{r}
@@ -90,6 +93,7 @@ gs_data_agg<-
               values_from = score,
               names_prefix = "gs_")
 
+  
 #reliability test
 cronbach_alpha <- cronbach.alpha(gs_data_agg%>%dplyr::select(gs_activeeng:gs_general))
 gs_cronbach_alpha<-cronbach_alpha
@@ -665,7 +669,9 @@ all_data_centered_naught<-all_data%>%
   mutate(number_of_langs=as.numeric(number_of_langs),
     across(language_dprime:number_of_langs, ~ . - mean(.)),
     mean_working_memory=mean_working_memory*10,
-    language_dprime=language_dprime*2)
+    language_dprime=language_dprime*2,
+    melody_score = melody_score*1.5,
+    beat_score = beat_score*1.5)
 
 longer_all_data<-all_data_centered_naught%>%
   select(Participant.Private.ID:melody_score)%>%
@@ -757,16 +763,147 @@ geom_density_ridges(color="white",alpha=.5)+
   facet_grid(.~l2_coded)
 save_ggplot(p1)
 ```
+```{r}
+#viz for musical questionnaire
+gs_data_agg_viz<-
+  gs_data%>%
+  #select(-rating)%>%
+  pivot_wider(names_from = question_content,
+              values_from = c(rating,score),
+              names_prefix = "gs_")
+
+colnames(gs_data_agg_viz) <- sub("score_", "", colnames(gs_data_agg_viz))
+
+gs_data_agg_viz<-gs_data_agg_viz%>%
+  ungroup()%>%
+  select(Participant.Private.ID,c(rating_gs_activeeng:rating_gs_general))%>%
+  pivot_longer(cols=c(rating_gs_activeeng:rating_gs_general),names_to = "cats",values_to="ratings")%>%
+  filter(cats =="rating_gs_general")
+View(tester)
+
+#for language specific
+
+
+tester<-longer_all_data%>%
+  left_join(gs_data_agg_viz)%>%
+  left_join(part_info)%>%
+  mutate(Language = if_else(is.na(Language), "", Language))%>%
+  mutate(classroom_coded = case_when(Spreadsheet.Name=="Mandarin" & Language == "Mandarin Chinese"~"match",
+                                     Spreadsheet.Name=="italian" & Language == "Italian"~"match",
+                                     Spreadsheet.Name=="japanese" & Language == "japanese"~"match",
+                                     Spreadsheet.Name=="Mandarin" & Language != "Mandarin Chinese"~"no match",
+                                     Spreadsheet.Name=="italian" & Language != "Italian"~"no match",
+                                     Spreadsheet.Name=="japanese" & Language != "japanese"~"no match",))
+  
+
+title="by gs"
+p1 <- tester %>%
+  ggplot(aes(x = updated_tasks, y = values, color = ratings)) +
+  geom_line(aes(group = interaction(Participant.Private.ID, Spreadsheet.Name, color = ratings)), alpha = .3, size = .3) +
+  geom_point(size = 5, shape = 21, color = NA, show.legend = TRUE) +  # Adjusted geom_point
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  facet_grid(.~Spreadsheet.Name) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position = "none",
+        strip.text.x = element_blank(),
+        plot.margin = margin(-.2, 0, 0, 0, "cm")) +
+  coord_flip() +
+  scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
+  scale_x_discrete(limits = rev) +
+  xlab("") +
+  ylab("Normalized and Centered on zero values") +
+  guides(color = guide_legend(override.aes = list(shape = 21, size = 5)))  # Adjusted guides
+
+density_data<-tester%>%
+  select(Spreadsheet.Name,updated_tasks,ratings,values)%>%
+  filter(updated_tasks == "Language d'")
+
+density_plot <- 
+  ggplot(density_data, aes(values, fill = ratings)) + 
+    geom_density(color = "white",alpha=.3) +
+    theme_void() +
+    labs(fill = "GoldSmiths General Rankings")+
+    theme(legend.position = "top",
+        plot.margin = margin(0, 0, 0, 0, "cm"))+
+    facet_grid(.~Spreadsheet.Name, labeller = labeller(Spreadsheet.Name = c(italian = "Italian", japanese = "Japanese", Mandarin = "Mandarin")))+
+    scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
+    scale_fill_manual(values = c("#800080", "#008000", "#FFA500")) 
+
+empty_plot <- ggplot() + 
+              theme_void() + 
+              theme(plot.background = element_blank())
+
+combined_plot <- plot_grid(
+  plot_grid(empty_plot, density_plot, ncol = 2, rel_widths = c(3.5, 12)),  # Adjust 1 and 4 for the spacer and plot width
+  p1,
+  ncol = 1,
+  rel_heights = c(1, 4)  # Adjust for relative heights
+)
+
+combined_plot
+save_ggplot(combined_plot,width=7,height=4)
+
+
+title="by classroom"
+p1<-tester%>%
+  ggplot(aes(x=updated_tasks,y=values,color=ratings))+
+  #geom_point(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=ratings)),
+         #    alpha=1,size=.14)+
+  #geom_boxplot(aes(color=ratings),fill="white",alpha=1,width=1)+
+  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=ratings)),
+            alpha=.5,size=.3)+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  facet_grid(.~classroom_coded)+
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position = "bottom")+
+  coord_flip()+
+  scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
+  scale_fill_manual(values = c("#800080", "#008000", "#FFA500")) +
+  scale_x_discrete(limits=rev)
+save_ggplot(p1)
+
+
+title<-"gs density across tasks"
+p1<-tester %>%
+  ggplot() +
+  geom_density_ridges(color = "white", alpha = 0.5,aes(x = values,
+             y = as.factor(updated_tasks),
+             fill = as.factor(ratings))) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position="bottom"
+  )+
+  facet_grid(.~Spreadsheet.Name)
+save_ggplot(p1)
+
+
+```
+
 
 ```{r}
 #just for exploration
 title<-"dtasks connection students1"
 p1<-longer_all_data%>%
-  ggplot(aes(x=updated_tasks,y=values,color=music_coded,alpha=.2))+
-  geom_boxplot(alpha=.01)+
-  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name)),alpha=1,size=.08)+
+    ggplot(aes(x=updated_tasks,y=values,color=music_coded))+
+  geom_point(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),
+             alpha=1,size=.14)+
+  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),
+            alpha=.2,size=.15)+
+  geom_boxplot(aes(fill=music_coded),color="white",alpha=.4,width=.5)+
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  scale_color_manual(values = c("black", "red"))+
+  scale_fill_manual(values = c("black", "red"))+
   facet_wrap(.~Spreadsheet.Name)+
   scale_color_manual(values = c("black", "red"))+
   theme(panel.grid.major.y = element_blank(),
@@ -776,13 +913,20 @@ p1<-longer_all_data%>%
   scale_x_discrete(limits=rev)
 save_ggplot(p1)
 
+
 title<-"dtasks connection students2"
 p1<-longer_all_data%>%
   ggplot(aes(x=updated_tasks,y=values,color=music_coded,alpha=.2))+
-  geom_boxplot(alpha=.1)+
-  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name)),alpha=1,size=.08)+
+  geom_point(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),
+            alpha=1,size=.14)+
+  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),
+            alpha=.2,size=.5)+
+  geom_boxplot(aes(fill=music_coded),color="white",alpha=.4,width=.5)+
+  theme_minimal()+
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  scale_color_manual(values = c("black", "red"))+
+  scale_fill_manual(values = c("black", "red"))+
   facet_wrap(l2_coded~Spreadsheet.Name)+
   scale_color_manual(values = c("black", "red"))+
   theme(panel.grid.major.y = element_blank(),
