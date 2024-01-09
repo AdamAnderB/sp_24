@@ -1152,7 +1152,7 @@ kept_participants_each_exp<-all_data%>%
   unique()%>%
   group_by(experiment)%>%
   summarise(Value = n(),
-            Statistic = paste(experiment,".after"))%>%
+            Statistic = paste(experiment,".after",sep=""))%>%
   unique()%>%
   ungroup()%>%
   select(-experiment)
@@ -1163,7 +1163,7 @@ all_participants_each_exp<-met_data%>%
   unique()%>%
   group_by(experiment)%>%
   summarise(Value = n(),
-            Statistic = paste(experiment,".before"))%>%
+            Statistic = paste(experiment,".before",sep=""))%>%
   unique()%>%
   ungroup()%>%
   select(-experiment)
