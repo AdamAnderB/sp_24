@@ -3,6 +3,7 @@
 \usepackage{INTERSPEECH2021}
 \usepackage{subfiles}
 \usepackage{datatool}
+\usepackage{numspell}
 \DTLloaddb{cronbach}{scripts/data_output/cronbach_alpha.csv}
 \DTLloaddb{modelsouts}{scripts/data_output/dynamic_models.csv}
 \DTLloaddb{partrem}{scripts/data_output/participant_removal.csv}
@@ -68,16 +69,10 @@ This is how many participants we kept for the cmu data:
 \section{methods}
 
 \subsubsection{participants}
-Thirty L1 English speakers participated in the experiment.
+ The recruitment of \livedata{partrem}{starting_participants} participants was managed through Prolific (n=\livedata{partrem}{data_exp_142778-v2 .before}) \cite{Palan_2018} and in-person recruitment (n=\livedata{partrem}{data_exp_141883-v12 .before}). Not included in this, 22 participants were rejected from participant due to failing initial requirements (e.g., eight removed for failed headphone-check)\cite{milne_2021}. Of the \livedata{partrem}{starting_participants}participants who participated in the study, \numspell{\livedata{partrem}{removed_participants}} were removed for low accuracy scores. Three median absolute deviations (MAD) was used as the standard for removal to maximize retained participants \cite{Leys_2013}. Of these, \numspell{\livedata{taskrem}{particip_remove_lang.remove}} were removed for being below MAD range in the language tasks and \numspell{\livedata{taskrem}{rhythm_part.remove}} removed for low performance in auditory-motor integration task.  
 
-The experiment was designed in Gorilla \cite{gorilla_Anwyl-Irvine_2019}. The recruitment of \livedata{partrem}{kept_participants} participants was managed through both Prolific \cite{Palan_2018} and in-person recruitment. Not included
-in those \livedata{partrem}{kept_participants}, \livedata{partrem}{removed_participants} participants were rejected from participation based on not meeting
-initial requirements; including: eight headphone check failures (Milne et al., 2021), 23
-eye-calibration failures, five timeouts (90-minute limit), one IRB non-consent. Of the 60
-participants who participated in the study, one was removed due to age, two were
-removed for other language experiences, three were removed for low accuracy scores
-(below three standard deviations of the mean inaccuracies), and five were removed for
-having a low frame rate (< 5Hz). As in Porretta et al. (2020), participants were asked
+
+As in Porretta et al. (2020), participants were asked
 to estimate their total lifetime experience interacting with accented Chinese speakers
 (as a percentage of their lifetime interactions). The resulting 49 participants’ reported
 amount of Chinese accent experience (range= 0-100 M = 10.47% (SD = 14.13), was
