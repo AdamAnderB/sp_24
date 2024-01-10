@@ -1402,8 +1402,11 @@ dynamic_models<-all_models%>%
   pivot_longer(cols=c(estimate:conf_higher),names_to="part",values_to="Value")%>%
   mutate(Statistic=paste(Statistic,part,sep="."))%>%
   select(!part)%>%
-  mutate(Value=round(Value,2))
-  
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.001, 0.001, Value)) %>%
+  mutate(Value = format(round(Value, digits = 2), nsmall = 2))%>%
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.001, 0.001, Value))
+
+dynamic_models
 create_folder_same_level("data_output")
 write.csv(participant_removal, "data_output/participant_removal.csv", row.names = FALSE)
 write.csv(taskremoval_long, "data_output/taskremoval.csv", row.names = FALSE)
