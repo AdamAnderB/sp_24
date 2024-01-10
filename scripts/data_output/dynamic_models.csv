@@ -1,133 +1,133 @@
 "Statistic","Value"
-"Mandarin.(Intercept).estimate",2.92
-"Mandarin.(Intercept).std.error",0.66
-"Mandarin.(Intercept).statistic",4.44
-"Mandarin.(Intercept).p.value",0
-"Mandarin.(Intercept).conf_lower",1.63
-"Mandarin.(Intercept).conf_higher",4.21
-"Italian.(Intercept).estimate",0.59
-"Italian.(Intercept).std.error",0.53
-"Italian.(Intercept).statistic",1.12
-"Italian.(Intercept).p.value",0.27
-"Italian.(Intercept).conf_lower",-0.44
-"Italian.(Intercept).conf_higher",1.62
-"Japanese.(Intercept).estimate",-0.59
-"Japanese.(Intercept).std.error",0.6
-"Japanese.(Intercept).statistic",-0.98
-"Japanese.(Intercept).p.value",0.33
-"Japanese.(Intercept).conf_lower",-1.77
-"Japanese.(Intercept).conf_higher",0.59
-"Mandarin.l2_codednon l2 match.estimate",0.26
-"Mandarin.l2_codednon l2 match.std.error",0.17
-"Mandarin.l2_codednon l2 match.statistic",1.57
-"Mandarin.l2_codednon l2 match.p.value",0.12
-"Mandarin.l2_codednon l2 match.conf_lower",-0.06
-"Mandarin.l2_codednon l2 match.conf_higher",0.58
-"Japanese.l2_codednon l2 match.estimate",0.28
-"Japanese.l2_codednon l2 match.std.error",0.15
-"Japanese.l2_codednon l2 match.statistic",1.84
-"Japanese.l2_codednon l2 match.p.value",0.07
-"Japanese.l2_codednon l2 match.conf_lower",-0.02
-"Japanese.l2_codednon l2 match.conf_higher",0.57
-"Mandarin.music_codednon music.estimate",0.22
-"Mandarin.music_codednon music.std.error",0.17
-"Mandarin.music_codednon music.statistic",1.3
-"Mandarin.music_codednon music.p.value",0.2
-"Mandarin.music_codednon music.conf_lower",-0.11
-"Mandarin.music_codednon music.conf_higher",0.55
-"Mandarin.gs_general.estimate",0.5
-"Mandarin.gs_general.std.error",0.33
-"Mandarin.gs_general.statistic",1.52
-"Mandarin.gs_general.p.value",0.14
-"Mandarin.gs_general.conf_lower",-0.15
-"Mandarin.gs_general.conf_higher",1.16
-"Italian.gs_general.estimate",-0.85
-"Italian.gs_general.std.error",0.34
-"Italian.gs_general.statistic",-2.47
-"Italian.gs_general.p.value",0.02
-"Italian.gs_general.conf_lower",-1.52
-"Italian.gs_general.conf_higher",-0.18
-"Mandarin.gs_activeeng.estimate",-0.45
-"Mandarin.gs_activeeng.std.error",0.29
-"Mandarin.gs_activeeng.statistic",-1.57
-"Mandarin.gs_activeeng.p.value",0.13
-"Mandarin.gs_activeeng.conf_lower",-1.01
-"Mandarin.gs_activeeng.conf_higher",0.11
-"Japanese.gs_activeeng.estimate",-0.58
-"Japanese.gs_activeeng.std.error",0.19
-"Japanese.gs_activeeng.statistic",-3.13
-"Japanese.gs_activeeng.p.value",0
-"Japanese.gs_activeeng.conf_lower",-0.95
-"Japanese.gs_activeeng.conf_higher",-0.22
-"Mandarin.gs_perceptabil.estimate",-0.49
-"Mandarin.gs_perceptabil.std.error",0.28
-"Mandarin.gs_perceptabil.statistic",-1.76
-"Mandarin.gs_perceptabil.p.value",0.09
-"Mandarin.gs_perceptabil.conf_lower",-1.04
-"Mandarin.gs_perceptabil.conf_higher",0.06
-"Italian.gs_singingabil.estimate",0.57
-"Italian.gs_singingabil.std.error",0.3
-"Italian.gs_singingabil.statistic",1.86
-"Italian.gs_singingabil.p.value",0.07
-"Italian.gs_singingabil.conf_lower",-0.03
-"Italian.gs_singingabil.conf_higher",1.16
-"Japanese.gs_singingabil.estimate",0.39
-"Japanese.gs_singingabil.std.error",0.17
-"Japanese.gs_singingabil.statistic",2.25
-"Japanese.gs_singingabil.p.value",0.03
-"Japanese.gs_singingabil.conf_lower",0.05
-"Japanese.gs_singingabil.conf_higher",0.73
-"Mandarin.gs_emotions.estimate",-0.6
-"Mandarin.gs_emotions.std.error",0.29
-"Mandarin.gs_emotions.statistic",-2.06
-"Mandarin.gs_emotions.p.value",0.05
-"Mandarin.gs_emotions.conf_lower",-1.18
-"Mandarin.gs_emotions.conf_higher",-0.03
-"Mandarin.MET_dprime_Melody.estimate",0.42
-"Mandarin.MET_dprime_Melody.std.error",0.19
-"Mandarin.MET_dprime_Melody.statistic",2.21
-"Mandarin.MET_dprime_Melody.p.value",0.03
-"Mandarin.MET_dprime_Melody.conf_lower",0.05
-"Mandarin.MET_dprime_Melody.conf_higher",0.79
-"Japanese.MET_dprime_Melody.estimate",-0.26
-"Japanese.MET_dprime_Melody.std.error",0.15
-"Japanese.MET_dprime_Melody.statistic",-1.73
-"Japanese.MET_dprime_Melody.p.value",0.09
-"Japanese.MET_dprime_Melody.conf_lower",-0.55
-"Japanese.MET_dprime_Melody.conf_higher",0.03
-"Italian.MET_dprime_Rhythm.estimate",0.08
-"Italian.MET_dprime_Rhythm.std.error",0.19
-"Italian.MET_dprime_Rhythm.statistic",0.42
-"Italian.MET_dprime_Rhythm.p.value",0.68
-"Italian.MET_dprime_Rhythm.conf_lower",-0.29
-"Italian.MET_dprime_Rhythm.conf_higher",0.45
-"Mandarin.mean_working_memory.estimate",-0.11
-"Mandarin.mean_working_memory.std.error",0.1
-"Mandarin.mean_working_memory.statistic",-1.04
-"Mandarin.mean_working_memory.p.value",0.3
-"Mandarin.mean_working_memory.conf_lower",-0.3
-"Mandarin.mean_working_memory.conf_higher",0.09
-"Italian.mean_working_memory.estimate",0.27
-"Italian.mean_working_memory.std.error",0.1
-"Italian.mean_working_memory.statistic",2.57
-"Italian.mean_working_memory.p.value",0.01
-"Italian.mean_working_memory.conf_lower",0.06
-"Italian.mean_working_memory.conf_higher",0.47
-"Japanese.mean_working_memory.estimate",0.29
-"Japanese.mean_working_memory.std.error",0.1
-"Japanese.mean_working_memory.statistic",2.98
-"Japanese.mean_working_memory.p.value",0
-"Japanese.mean_working_memory.conf_lower",0.1
-"Japanese.mean_working_memory.conf_higher",0.47
-"Japanese.beat_score.estimate",1.42
-"Japanese.beat_score.std.error",0.42
-"Japanese.beat_score.statistic",3.35
-"Japanese.beat_score.p.value",0
-"Japanese.beat_score.conf_lower",0.59
-"Japanese.beat_score.conf_higher",2.25
-"Mandarin.melody_score.estimate",0.46
-"Mandarin.melody_score.std.error",0.34
-"Mandarin.melody_score.statistic",1.35
-"Mandarin.melody_score.p.value",0.19
-"Mandarin.melody_score.conf_lower",-0.21
-"Mandarin.melody_score.conf_higher",1.14
+"Mandarin.(Intercept).estimate","  2.92"
+"Mandarin.(Intercept).std.error","  0.66"
+"Mandarin.(Intercept).statistic","  4.44"
+"Mandarin.(Intercept).p.value","  0.00"
+"Mandarin.(Intercept).conf_lower","  1.63"
+"Mandarin.(Intercept).conf_higher","  4.21"
+"Italian.(Intercept).estimate","  0.59"
+"Italian.(Intercept).std.error","  0.53"
+"Italian.(Intercept).statistic","  1.12"
+"Italian.(Intercept).p.value","100.00"
+"Italian.(Intercept).conf_lower"," -0.44"
+"Italian.(Intercept).conf_higher","  1.62"
+"Japanese.(Intercept).estimate"," -0.59"
+"Japanese.(Intercept).std.error","  0.60"
+"Japanese.(Intercept).statistic"," -0.98"
+"Japanese.(Intercept).p.value","100.00"
+"Japanese.(Intercept).conf_lower"," -1.77"
+"Japanese.(Intercept).conf_higher","  0.59"
+"Mandarin.l2_codednon l2 match.estimate","  0.26"
+"Mandarin.l2_codednon l2 match.std.error","  0.17"
+"Mandarin.l2_codednon l2 match.statistic","  1.57"
+"Mandarin.l2_codednon l2 match.p.value","100.00"
+"Mandarin.l2_codednon l2 match.conf_lower"," -0.06"
+"Mandarin.l2_codednon l2 match.conf_higher","  0.58"
+"Japanese.l2_codednon l2 match.estimate","  0.28"
+"Japanese.l2_codednon l2 match.std.error","  0.15"
+"Japanese.l2_codednon l2 match.statistic","  1.84"
+"Japanese.l2_codednon l2 match.p.value","100.00"
+"Japanese.l2_codednon l2 match.conf_lower"," -0.02"
+"Japanese.l2_codednon l2 match.conf_higher","  0.57"
+"Mandarin.music_codednon music.estimate","  0.22"
+"Mandarin.music_codednon music.std.error","  0.17"
+"Mandarin.music_codednon music.statistic","  1.30"
+"Mandarin.music_codednon music.p.value","100.00"
+"Mandarin.music_codednon music.conf_lower"," -0.11"
+"Mandarin.music_codednon music.conf_higher","  0.55"
+"Mandarin.gs_general.estimate","  0.50"
+"Mandarin.gs_general.std.error","  0.33"
+"Mandarin.gs_general.statistic","  1.52"
+"Mandarin.gs_general.p.value","100.00"
+"Mandarin.gs_general.conf_lower"," -0.15"
+"Mandarin.gs_general.conf_higher","  1.16"
+"Italian.gs_general.estimate"," -0.85"
+"Italian.gs_general.std.error","  0.34"
+"Italian.gs_general.statistic"," -2.47"
+"Italian.gs_general.p.value","  0.05"
+"Italian.gs_general.conf_lower"," -1.52"
+"Italian.gs_general.conf_higher"," -0.18"
+"Mandarin.gs_activeeng.estimate"," -0.45"
+"Mandarin.gs_activeeng.std.error","  0.29"
+"Mandarin.gs_activeeng.statistic"," -1.57"
+"Mandarin.gs_activeeng.p.value","100.00"
+"Mandarin.gs_activeeng.conf_lower"," -1.01"
+"Mandarin.gs_activeeng.conf_higher","  0.11"
+"Japanese.gs_activeeng.estimate"," -0.58"
+"Japanese.gs_activeeng.std.error","  0.19"
+"Japanese.gs_activeeng.statistic"," -3.13"
+"Japanese.gs_activeeng.p.value","  0.01"
+"Japanese.gs_activeeng.conf_lower"," -0.95"
+"Japanese.gs_activeeng.conf_higher"," -0.22"
+"Mandarin.gs_perceptabil.estimate"," -0.49"
+"Mandarin.gs_perceptabil.std.error","  0.28"
+"Mandarin.gs_perceptabil.statistic"," -1.76"
+"Mandarin.gs_perceptabil.p.value","100.00"
+"Mandarin.gs_perceptabil.conf_lower"," -1.04"
+"Mandarin.gs_perceptabil.conf_higher","  0.06"
+"Italian.gs_singingabil.estimate","  0.57"
+"Italian.gs_singingabil.std.error","  0.30"
+"Italian.gs_singingabil.statistic","  1.86"
+"Italian.gs_singingabil.p.value","100.00"
+"Italian.gs_singingabil.conf_lower"," -0.03"
+"Italian.gs_singingabil.conf_higher","  1.16"
+"Japanese.gs_singingabil.estimate","  0.39"
+"Japanese.gs_singingabil.std.error","  0.17"
+"Japanese.gs_singingabil.statistic","  2.25"
+"Japanese.gs_singingabil.p.value","  0.05"
+"Japanese.gs_singingabil.conf_lower","  0.05"
+"Japanese.gs_singingabil.conf_higher","  0.73"
+"Mandarin.gs_emotions.estimate"," -0.60"
+"Mandarin.gs_emotions.std.error","  0.29"
+"Mandarin.gs_emotions.statistic"," -2.06"
+"Mandarin.gs_emotions.p.value","  0.05"
+"Mandarin.gs_emotions.conf_lower"," -1.18"
+"Mandarin.gs_emotions.conf_higher"," -0.03"
+"Mandarin.MET_dprime_Melody.estimate","  0.42"
+"Mandarin.MET_dprime_Melody.std.error","  0.19"
+"Mandarin.MET_dprime_Melody.statistic","  2.21"
+"Mandarin.MET_dprime_Melody.p.value","  0.05"
+"Mandarin.MET_dprime_Melody.conf_lower","  0.05"
+"Mandarin.MET_dprime_Melody.conf_higher","  0.79"
+"Japanese.MET_dprime_Melody.estimate"," -0.26"
+"Japanese.MET_dprime_Melody.std.error","  0.15"
+"Japanese.MET_dprime_Melody.statistic"," -1.73"
+"Japanese.MET_dprime_Melody.p.value","100.00"
+"Japanese.MET_dprime_Melody.conf_lower"," -0.55"
+"Japanese.MET_dprime_Melody.conf_higher","  0.03"
+"Italian.MET_dprime_Rhythm.estimate","  0.08"
+"Italian.MET_dprime_Rhythm.std.error","  0.19"
+"Italian.MET_dprime_Rhythm.statistic","  0.42"
+"Italian.MET_dprime_Rhythm.p.value","100.00"
+"Italian.MET_dprime_Rhythm.conf_lower"," -0.29"
+"Italian.MET_dprime_Rhythm.conf_higher","  0.45"
+"Mandarin.mean_working_memory.estimate"," -0.11"
+"Mandarin.mean_working_memory.std.error","  0.10"
+"Mandarin.mean_working_memory.statistic"," -1.04"
+"Mandarin.mean_working_memory.p.value","100.00"
+"Mandarin.mean_working_memory.conf_lower"," -0.30"
+"Mandarin.mean_working_memory.conf_higher","  0.09"
+"Italian.mean_working_memory.estimate","  0.27"
+"Italian.mean_working_memory.std.error","  0.10"
+"Italian.mean_working_memory.statistic","  2.57"
+"Italian.mean_working_memory.p.value","  0.05"
+"Italian.mean_working_memory.conf_lower","  0.06"
+"Italian.mean_working_memory.conf_higher","  0.47"
+"Japanese.mean_working_memory.estimate","  0.29"
+"Japanese.mean_working_memory.std.error","  0.10"
+"Japanese.mean_working_memory.statistic","  2.98"
+"Japanese.mean_working_memory.p.value","  0.01"
+"Japanese.mean_working_memory.conf_lower","  0.10"
+"Japanese.mean_working_memory.conf_higher","  0.47"
+"Japanese.beat_score.estimate","  1.42"
+"Japanese.beat_score.std.error","  0.42"
+"Japanese.beat_score.statistic","  3.35"
+"Japanese.beat_score.p.value","  0.01"
+"Japanese.beat_score.conf_lower","  0.59"
+"Japanese.beat_score.conf_higher","  2.25"
+"Mandarin.melody_score.estimate","  0.46"
+"Mandarin.melody_score.std.error","  0.34"
+"Mandarin.melody_score.statistic","  1.35"
+"Mandarin.melody_score.p.value","100.00"
+"Mandarin.melody_score.conf_lower"," -0.21"
+"Mandarin.melody_score.conf_higher","  1.14"
