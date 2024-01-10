@@ -1,10 +1,9 @@
 "Statistic","Value"
-"starting_participants",53
-"kept_participants",49
+"starting_participants",48
+"kept_participants",44
 "removed_participants",4
-"data_exp_141883-v12.after",37
+"l1_removed_participants",5
+"data_exp_141883-v12.after",32
 "data_exp_142778-v2.after",12
 "data_exp_141883-v12.before",38
 "data_exp_142778-v2.before",15
-"mean_age",22.59
-"sd_age",4.73

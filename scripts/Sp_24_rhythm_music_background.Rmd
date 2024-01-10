@@ -61,10 +61,6 @@ mandarin_data<-data_list$Mandarin_AX_Tone
 work_memory<-data_list$Digit_Span__Advanced
 #questionnairre
 quests<-data_list$Language_experience_questionnaire
-#participant info no longer appicable because of the non-cmu students don't have this:
-part_info<-data_list$participant_info
-part_info$Participant.Private.ID<-as.character(part_info$Participant.Private.ID)
-View(part_info)
 ```
 
 ```{r}
@@ -329,7 +325,7 @@ p1<-data_rhythm_complete%>%
         panel.grid.major.x = element_blank(),
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank())
-save_ggplot(p1,width = 3,height=3)
+save_ggplot(p1,width = 5,height=5)
 
 #This plot shows mistakes from gorilla timing mechanism, which is less than .5% of the time. I am actually pretty impress with this.
 title<-"hitting beats across stimuli,participants, and beat position"
@@ -654,17 +650,20 @@ all_data<-mij_d_prime%>%
   inner_join(cleaned_melody_agg)%>%
   inner_join(quests)%>%
   select(Participant.Private.ID,experiment,most_played_instrument,education,everything())%>%
-  mutate(across(gs_activeeng:gs_general, ~ . / 100*2),
-         L2s=paste(lang_dominance_order_2, lang_dominance_order_3,
-                   lang_dominance_order_4, lang_dominance_order_5, sep = ", "),
-         L1=lang_dominance_order_1)%>%
-  select(Participant.Private.ID,Spreadsheet.Name,L2s,everything())%>%
-  mutate(l2_coded = if_else(str_detect(tolower(L2s), fixed(tolower(Spreadsheet.Name))), "l2 match", "non l2 match"))%>%
-  mutate(l1_coded = if_else(str_detect(tolower(lang_acquisition_order_1), fixed(tolower(Spreadsheet.Name))), "l1 match", "non l1 match"))%>%
-  mutate(music_coded = as.factor(if_else(str_detect(most_played_instrument, "None|none|N/A"), "non music", "music")))%>%
-  select(Participant.Private.ID,Spreadsheet.Name,L2s,L1,l1_coded,l2_coded,music_coded,experiment,most_played_instrument,education,everything())%>%
+  mutate(across(gs_activeeng:gs_general, ~ . / 100*2))%>%
+  select(Participant.Private.ID,Spreadsheet.Name,everything())%>%
   select(-language_c)
-  
+
+removed_for_l1<-all_data%>%
+  mutate(eng_l1=if_else(lang_dominance_order_1 == "English"|lang_dominance_order_1 == "english",1,0))%>%
+  filter(eng_l1==0)%>%
+  select(Participant.Private.ID)%>%
+  unique()
+
+all_data<-all_data%>%
+  mutate(eng_l1=if_else(lang_dominance_order_1 == "English"|lang_dominance_order_1 == "english",1,0))%>%
+  filter(eng_l1==1)
+
 all_data_centered_naught<-all_data%>%
   mutate(number_of_langs=as.numeric(number_of_langs),
     across(language_dprime:number_of_langs, ~ . - mean(.)),
@@ -706,48 +705,14 @@ longer_all_data<-longer_all_data%>%
   arrange(number) %>%
   mutate(updated_tasks = factor(updated_terms, levels = unique(updated_terms)))
 
-title<-"Normalized score distrubutions by task connections"
-p1<-longer_all_data%>%
-  ggplot(aes(x=updated_tasks,y=values,color=music_coded))+
-  geom_point(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),alpha=1,size=.14)+
-  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=music_coded)),alpha=.2,size=.15)+
-  geom_boxplot(aes(fill=music_coded),color="white",alpha=.4,width=.5)+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  scale_color_manual(values = c("black", "red"))+
-  scale_fill_manual(values = c("black", "red"))+
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        panel.grid.minor.x = element_blank())+
-  coord_flip()+
-  scale_x_discrete(limits=rev)
-save_ggplot(p1)
 
-title<-"Normalized score distrubutions by task"
-p1<-longer_all_data%>%
-  ggplot(aes(y=updated_tasks,x=values,group= interaction(as.factor(music_coded),as.factor(task)),fill = as.factor(music_coded),show.legend = F))+
-  geom_density_ridges(color="white",alpha=.5)+
-  scale_x_continuous(limits = c(-2, 2),breaks = c(-2,-1,0,1,2))+
-  scale_fill_manual(values =c("black", "red"))+
-  scale_color_manual(values =c("black", "red"))+
-  scale_y_discrete(limits=rev)+
-  labs(x = "normalized centered scores", y = "density", fill = "\n",alpha="") +
-  theme_minimal()+
-  theme(legend.position = c(.5, .1),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        panel.grid.major.y = element_blank())+
-  facet_grid(.~l2_coded)
-save_ggplot(p1,width = 5.5,height=5.5)
-
-key<-longer_all_data%>%select(Participant.Private.ID,l2_coded,l1_coded,music_coded)
+key<-longer_all_data%>%select(Participant.Private.ID)
 mij_d_prime_keyed<-mij_d_prime%>%
   right_join(key)
 
 title<-"dprime density across tasks"
 p1<-mij_d_prime_keyed%>%
-  ggplot(aes(y=Spreadsheet.Name,x=language_dprime,group= interaction(as.factor(music_coded),as.factor(Spreadsheet.Name)),fill = as.factor(music_coded),show.legend = F))+
+  ggplot(aes(y=Spreadsheet.Name,x=language_dprime,group= interaction(as.factor(Spreadsheet.Name)),show.legend = F))+
 geom_density_ridges(color="white",alpha=.5)+
   scale_x_continuous(limits = c(0, 3),breaks = c(0,1,2,3))+
   scale_fill_manual(values =c("black", "red","yellow"))+
@@ -760,13 +725,8 @@ geom_density_ridges(color="white",alpha=.5)+
         panel.grid.major.x = element_blank(),
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank(),
-        legend.position = c(.5, .25))+
-  facet_grid(.~l2_coded,
-             labeller = labeller(l2_coded = 
-                                   c("l2 match" = "L2 match","non l2 match" = "L2 no match"))) 
+        legend.position = c(.5, .25))
 save_ggplot(p1,width = 5,height=2.5)
-
-
 ```
 ```{r}
 #viz for musical questionnaire
@@ -784,23 +744,11 @@ gs_data_agg_viz<-gs_data_agg_viz%>%
   select(Participant.Private.ID,c(rating_gs_activeeng:rating_gs_general))%>%
   pivot_longer(cols=c(rating_gs_activeeng:rating_gs_general),names_to = "cats",values_to="ratings")%>%
   filter(cats =="rating_gs_general")
-View(tester)
 
 #for language specific
-
-
 tester<-longer_all_data%>%
   left_join(gs_data_agg_viz)%>%
-  left_join(part_info)%>%
-  mutate(Language = if_else(is.na(Language), "", Language))%>%
-  mutate(classroom_coded = case_when(Spreadsheet.Name=="Mandarin" & Language == "Mandarin Chinese"~"match",
-                                     Spreadsheet.Name=="italian" & Language == "Italian"~"match",
-                                     Spreadsheet.Name=="japanese" & Language == "japanese"~"match",
-                                     Spreadsheet.Name=="Mandarin" & Language != "Mandarin Chinese"~"no match",
-                                     Spreadsheet.Name=="italian" & Language != "Italian"~"no match",
-                                     Spreadsheet.Name=="japanese" & Language != "japanese"~"no match",))%>%
   mutate(ratings = factor(ratings, levels = c("Basic", "Average","Higher than average")))
-  
 
 title="by gs"
 p1 <- tester %>%
@@ -843,36 +791,12 @@ empty_plot <- ggplot() +
               theme(plot.background = element_blank())
 
 combined_plot <- plot_grid(
-  plot_grid(empty_plot, density_plot, ncol = 2, rel_widths = c(3.5, 12)),  # Adjust 1 and 4 for the spacer and plot width
+  plot_grid(empty_plot, density_plot, ncol = 2, rel_widths = c(2, 12)),  # Adjust 1 and 4 for the spacer and plot width
   p1,
   ncol = 1,
   rel_heights = c(1, 4)  # Adjust for relative heights
 )
-
-combined_plot
-save_ggplot(combined_plot,width=7,height=4)
-
-
-title="by classroom"
-p1<-tester%>%
-  ggplot(aes(x=updated_tasks,y=values,color=ratings))+
-  #geom_point(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=ratings)),
-         #    alpha=1,size=.14)+
-  #geom_boxplot(aes(color=ratings),fill="white",alpha=1,width=1)+
-  geom_line(aes(group=interaction(Participant.Private.ID,Spreadsheet.Name,color=ratings)),
-            alpha=.5,size=.3)+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  facet_grid(.~classroom_coded)+
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        legend.position = "bottom")+
-  coord_flip()+
-  scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
-  scale_fill_manual(values = c("#800080", "#008000", "#FFA500")) +
-  scale_x_discrete(limits=rev)
-save_ggplot(p1)
+save_ggplot(combined_plot,width=10,height=4)
 
 
 title<-"gs density across tasks"
@@ -891,8 +815,6 @@ p1<-tester %>%
   )+
   facet_grid(.~Spreadsheet.Name)
 save_ggplot(p1)
-
-
 ```
 
 
@@ -922,61 +844,6 @@ p1 <- tester %>%
   ylab("Normalized and Centered on zero values")
 save_ggplot(p1,width = 6,height = 8)
 ```
-```{r}
-title="by gs"
-p1 <- tester %>%
-  ggplot(aes(x = updated_tasks, y = values, color = ratings)) +
-  geom_line(aes(group = interaction(Participant.Private.ID, Spreadsheet.Name, color = ratings)), alpha = .3, size = .3) +
-  geom_point(size = 5, shape = 21, color = NA, show.legend = TRUE) +  # Adjusted geom_point
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  facet_grid(.~Spreadsheet.Name) +
-  theme(panel.grid.major.y = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        legend.position = "none",
-        strip.text.x = element_blank(),
-        plot.margin = margin(-.2, 0, 0, 0, "cm")) +
-  coord_flip() +
-  scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
-  scale_x_discrete(limits = rev) +
-  xlab("") +
-  ylab("Normalized and Centered on zero values") +
-  guides(color = guide_legend(override.aes = list(shape = 21, size = 5)))  # Adjusted guides
-
-density_data<-tester%>%
-  select(Spreadsheet.Name,updated_tasks,ratings,values)%>%
-  filter(updated_tasks == "Language d'")
-
-density_plot <- 
-  ggplot(density_data, aes(values, fill = ratings)) + 
-    geom_density(color = "white",alpha=.3) +
-    theme_void() +
-    labs(fill = "GoldSmiths General Rankings")+
-    theme(legend.position = "top",
-        plot.margin = margin(0, 0, 0, 0, "cm"))+
-    facet_grid(.~Spreadsheet.Name, labeller = labeller(Spreadsheet.Name = c(italian = "Italian", japanese = "Japanese", Mandarin = "Mandarin")))+
-    scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
-    scale_fill_manual(values = c("#800080", "#008000", "#FFA500")) 
-
-empty_plot <- ggplot() + 
-              theme_void() + 
-              theme(plot.background = element_blank())
-
-combined_plot <- plot_grid(
-  plot_grid(empty_plot, density_plot, ncol = 2, rel_widths = c(3.5, 12)),  # Adjust 1 and 4 for the spacer and plot width
-  p1,
-  ncol = 1,
-  rel_heights = c(1, 4)  # Adjust for relative heights
-)
-
-combined_plot
-save_ggplot(combined_plot,width=7,height=4)
-
-
-
-```
-
 
 ```{r}
 #prep for models
@@ -987,9 +854,6 @@ j_data<-all_data%>%filter(Spreadsheet.Name=="japanese")
 
 #Mandarin model comparisons
 m_data_m1 <- lm(language_dprime ~
-        l1_coded +
-        l2_coded +
-        music_coded+
         gs_general +
         gs_activeeng +
         gs_perceptabil +
@@ -1005,8 +869,6 @@ m_data_m1 <- lm(language_dprime ~
 summary(m_data_m1)
 
 m_data_m2 <- lm(language_dprime ~
-        l2_coded +
-        music_coded+
         gs_general +
         gs_activeeng +
         gs_perceptabil +
@@ -1014,49 +876,62 @@ m_data_m2 <- lm(language_dprime ~
         gs_singingabil +
         gs_emotions +
         MET_dprime_Melody +
-        MET_dprime_Rhythm +
         mean_working_memory +
-        beat_score +
         melody_score,
-        data = i_data) 
+        data = m_data) 
 summary(m_data_m2)
 
 m_data_m3 <- lm(language_dprime ~
-        l2_coded +
-        music_coded+
         gs_general +
         gs_activeeng +
         gs_perceptabil +
+        gs_musictrain +
+        gs_singingabil +
         gs_emotions +
         MET_dprime_Melody +
-        mean_working_memory +
-        melody_score,
+        mean_working_memory,
         data = m_data) 
 summary(m_data_m3)
 
 m_data_m4 <- lm(language_dprime ~
-        l2_coded +
-        music_coded+
-        gs_general +
         gs_activeeng +
         gs_perceptabil +
+        gs_musictrain +
+        gs_singingabil +
         gs_emotions +
         MET_dprime_Melody +
         mean_working_memory,
         data = m_data) 
 summary(m_data_m4)
 
+m_data_m5 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory,
+        data = m_data) 
+summary(m_data_m5)
+
+m_data_m6 <- lm(language_dprime ~
+        gs_perceptabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory,
+        data = m_data) 
+summary(m_data_m6)
+
 anova(m_data_m1,m_data_m2)
 anova(m_data_m2,m_data_m3)
 anova(m_data_m3,m_data_m4)
-#model three is the parsimonisous model
-m_model<-m_data_m3
+anova(m_data_m4,m_data_m5)
+anova(m_data_m5,m_data_m6)
+#model three is the parsimonisous model due to better no co-linearity. Simplest takes into account most variance
+m_model<-m_data_m6
 
 #italian data
 #l1_coded is not here because it only has one level in the dataset so far.
 i_data_m1 <- lm(language_dprime ~
-        l2_coded +
-        music_coded+
         gs_general +
         gs_activeeng +
         gs_perceptabil +
@@ -1073,8 +948,6 @@ summary(i_data_m1)
 
 
 i_data_m2 <- lm(language_dprime ~
-        l2_coded +
-        music_coded+
         gs_general +
         gs_perceptabil +
         gs_musictrain +
@@ -1088,8 +961,6 @@ i_data_m2 <- lm(language_dprime ~
 summary(i_data_m2)
 
 i_data_m3 <- lm(language_dprime ~
-        l2_coded +
-        music_coded+
         gs_general +
         gs_singingabil +
         gs_emotions +
@@ -1101,7 +972,6 @@ i_data_m3 <- lm(language_dprime ~
 summary(i_data_m3)
 
 i_data_m4 <- lm(language_dprime ~
-        l2_coded +
         gs_general +
         gs_singingabil +
         gs_emotions +
@@ -1129,8 +999,6 @@ i_model<-i_data_m5
 
 #Japanese model comparison
 j_data_m1 <- lm(language_dprime ~
-        l2_coded +
-        music_coded+
         gs_general +
         gs_activeeng +
         gs_perceptabil +
@@ -1146,8 +1014,6 @@ j_data_m1 <- lm(language_dprime ~
 summary(j_data_m1)
 
 j_data_m2 <- lm(language_dprime ~
-        l2_coded +
-        music_coded+
         gs_activeeng +
         gs_singingabil +
         gs_emotions +
@@ -1160,7 +1026,6 @@ j_data_m2 <- lm(language_dprime ~
 summary(j_data_m2)
 
 j_data_m3 <- lm(language_dprime ~
-        l2_coded +
         gs_activeeng +
         gs_singingabil +
         gs_emotions +
@@ -1172,7 +1037,6 @@ j_data_m3 <- lm(language_dprime ~
 summary(j_data_m3)
 
 j_data_m4 <- lm(language_dprime ~
-        l2_coded +
         gs_activeeng +
         gs_singingabil +
         MET_dprime_Melody +
@@ -1199,7 +1063,7 @@ j_model<-j_data_m4
 
 ```{r}
 check_model(m_model)
-check_model(i_data_m5)
+check_model(i_model)
 check_model(j_model)
 ```
 
@@ -1243,7 +1107,7 @@ dodge_width <- position_dodge(width = 0.8)
 names<-all_models%>%
   select(term)%>%
   unique()
-names$updated_terms<-c("Intercepts","L1 (non match)","L2 (non match)", "Music student (non match)",
+names$updated_terms<-c("Intercepts",
                        "Goldsmiths general","Goldsmiths engagement","Goldsmiths perception",
                        "Goldsmiths training","Goldsmiths singing","Goldsmiths emotions",
                        "Musical Ear Test d' Melody","Musical Ear Test d' Rhythm","Working-memory",
@@ -1261,7 +1125,7 @@ p1<-all_models %>%
   ggplot(aes(x = updated_terms, y = estimate, color = model)) +
   geom_point(position = dodge_width,shape=19,size=3) +
   geom_text(aes(label=significance,y=-2),position=dodge_width,width = 0.1,size=5,show_guide=F)+
-  geom_errorbar(aes(ymin = conf_lower, ymax = conf_higher), position = dodge_width, width = 0.1,linewidth=1.5) +
+  geom_errorbar(aes(ymin = conf_lower, ymax = conf_higher), position = dodge_width, width = 0.1,linewidth=1.2) +
   scale_x_discrete(limits=rev)+
   coord_flip() + 
   theme_minimal() +
@@ -1286,7 +1150,7 @@ p2<-p1+guides(
     override.aes = aes(label = "")
   )
 )
-save_ggplot(p2,width = 5.5,height=7)
+save_ggplot(p2,width = 4.5,height=4.5)
 ```
 
 
@@ -1294,12 +1158,13 @@ save_ggplot(p2,width = 5.5,height=7)
 #csv output for dynamic writing in LaTex:
 
 #participant removal
-starting_participants<-nrow(data_list$Digit_Span__Advanced)
+starting_participants<-nrow(data_list$Digit_Span__Advanced)-nrow(removed_for_l1)
 kept_participants<-length(unique(all_data$Participant.Private.ID))
 removed_participants<-starting_participants-kept_participants
+l1_removed_participants<-nrow(removed_for_l1)
 
-keys <- c("starting_participants", "kept_participants", "removed_participants")
-values <- c(starting_participants, kept_participants, removed_participants)
+keys <- c("starting_participants", "kept_participants", "removed_participants","l1_removed_participants")
+values <- c(starting_participants, kept_participants, removed_participants,l1_removed_participants)
 
 participant_removal <- data.frame(Statistic = keys, Value = values, stringsAsFactors = FALSE)%>%
   mutate(Value=round(Value,2))
@@ -1326,24 +1191,27 @@ all_participants_each_exp<-met_data%>%
   ungroup()%>%
   select(-experiment)
 
+participant_removal<-participant_removal%>%
+  bind_rows(kept_participants_each_exp)%>%
+  bind_rows(all_participants_each_exp)%>%
+  mutate(Value=round(Value,2))
+    
 #participant age
 age<-all_data%>%
   select(Participant.Private.ID,age)%>%
   unique()%>%
   summarize(mean_age=mean(as.numeric(age)),
             sd_age=sd(as.numeric(age)))%>%
-  pivot_longer(cols=everything(),names_to = "Statistic",values_to = "Value")
-
-participant_removal<-participant_removal%>%
-  bind_rows(kept_participants_each_exp)%>%
-  bind_rows(all_participants_each_exp)%>%
-  bind_rows(age)%>%
-  mutate(Value=round(Value,2))
+  pivot_longer(cols=everything(),names_to = "Statistic",values_to = "Value")%>%
+  mutate(Value=round(Value,2))  
   
+###########
 #participant and item removal
+
 taskremoval <- lang_parts %>%
   bind_rows(lang_items) %>%
   mutate(after = before - remove)
+
 
 # Define a function to create a dataframe for a new row
 create_new_row <- function(Statistic, before, remove, after) {
@@ -1381,6 +1249,8 @@ taskremoval_long<-taskremoval%>%
   select(!type)%>%
   mutate(Value=round(Value,2))
 
+
+
 #cronbachs alpha
 cronbach_list <- list(gs = gs_cronbach_alpha, 
                       met = met_cronbach_alpha, 
@@ -1402,20 +1272,21 @@ dynamic_models<-all_models%>%
   pivot_longer(cols=c(estimate:conf_higher),names_to="part",values_to="Value")%>%
   mutate(Statistic=paste(Statistic,part,sep="."))%>%
   select(!part)%>%
-  mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.001, 0.001, Value)) %>%
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.001, 0.001, Value))%>%
   mutate(Value =as.numeric(Value))%>%
   mutate(Value = case_when(grepl("p.value", Statistic) & Value <= 0.001~ 0.001,
                            grepl("p.value", Statistic) & Value <= 0.01 & Value > 0.001 ~ 0.01,
                            grepl("p.value", Statistic) & Value <= 0.05 & Value > 0.01 ~ 0.05,
                            grepl("p.value", Statistic) & Value > 0.05 ~100,
-                           TRUE ~ Value))%>%
-  mutate(Value = format(round(Value, digits = 2), nsmall = 2))%>%
-  mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.0, 0.001, Value))
+                           TRUE ~ Value))
+  #mutate(Value = format(round(Value, digits = 2), nsmall = 2))
   
-
+View(age)
 grepl("p.value", dynamic_models$Statistic)
 dynamic_models
+age$Value <- format(age$Value , nsmall = 2)
 create_folder_same_level("data_output")
+write.csv(age, "data_output/age.csv", row.names = FALSE)
 write.csv(participant_removal, "data_output/participant_removal.csv", row.names = FALSE)
 write.csv(taskremoval_long, "data_output/taskremoval.csv", row.names = FALSE)
 write.csv(cronbachs_alpha_df, "data_output/cronbach_alpha.csv", row.names = FALSE)
