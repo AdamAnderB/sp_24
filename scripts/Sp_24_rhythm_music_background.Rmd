@@ -1403,9 +1403,17 @@ dynamic_models<-all_models%>%
   mutate(Statistic=paste(Statistic,part,sep="."))%>%
   select(!part)%>%
   mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.001, 0.001, Value)) %>%
+  mutate(Value =as.numeric(Value))%>%
+  mutate(Value = case_when(grepl("p.value", Statistic) & Value <= 0.001~ 0.001,
+                           grepl("p.value", Statistic) & Value <= 0.01 & Value > 0.001 ~ 0.01,
+                           grepl("p.value", Statistic) & Value <= 0.05 & Value > 0.01 ~ 0.05,
+                           grepl("p.value", Statistic) & Value > 0.05 ~100,
+                           TRUE ~ Value))%>%
   mutate(Value = format(round(Value, digits = 2), nsmall = 2))%>%
-  mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.001, 0.001, Value))
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.0, 0.001, Value))
+  
 
+grepl("p.value", dynamic_models$Statistic)
 dynamic_models
 create_folder_same_level("data_output")
 write.csv(participant_removal, "data_output/participant_removal.csv", row.names = FALSE)
