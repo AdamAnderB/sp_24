@@ -107,7 +107,7 @@ This is how many participants we kept for the cmu data:
 All of the participants took part in a multi-stage battery of language, music, and domain general tasks. Participants first took part in a two-part headphone check, an aural attention check and a dichotic-pitch task \cite{milne_2021}, followed by an 8 trial adaptive staircase digit-span task. After completing the head-phone check and digit-span tasks,
 all participants took part in either music or language segments, followed by the complementary segment (i.e., music $\rightarrow$ language, language $\rightarrow$ music). For all language and music tasks, stimuli and experimental design were adapted and built in Gorilla \cite{gorilla_Anwyl-Irvine_2019} for the current study from previous in-person studies (e.g., Mandarin \cite{Wiener_Bradley_2020}) that either made materials openly available on OSF \cite{OSF} or were provided by the original authors. 
 
-In the language segment, participants took part in three speeded AX-discrimination tasks for Italian, Japanese, and Mandarin.All Language stimuli were sampled at 44.1 kHz and recorded in sound attenuated booths (Mandarin) or studio (Japanese and Italian). The Italian and Japanese AX tasks, adapted from \cite{Tsukada_Cox_Hajek_Hirata_2017}, consisted of stop geminate contrasts: Italian - /\textipa{p t k b d g dZ}/, Japanese - /\textipa{t k tS}/. For the Italian AX task, stimuli consisted of 27 pairs of geminate contrasts (e.g., without geminate /\textipa{Eko}/ \textit{echo}, with geminate /\textipa{Ek\textlengthmark o}/ \textit{here}), which were made up of approximately half real and non-real words, spoken by three native speakers. For the Japanese AX task, stimuli consisted of 33 pairs of geminate contrasts (e.g., without geminate: /kate/ \textit{win}, with geminate: /katːe/ \textit{buying}), with approximately half of the pairs matching (e.g., without geminate high-low pitch accent /kate/, with geminate low-high pitch accent /katːe/) and mismatching (without geminate low-high pitch accent /heta/ \textit{unskilled}, without geminate low-high pitch accent /hetːa/ \textit{decreased}) in pitch-accent. The Mandarin task, adpated from \cite{Wiener_Bradley_2020}, consisted of 8 stimuli based on the Mandarin syllable yu with four tones (yu1, yu2, yu3, yu4) recorded by male and female native speakers and were normalized for F0 manipulation using \cite{Boersma_Weenink}'s method. Each tonal pairing co-occured equal amounts with each tone occurring with itself three times to equalize match-mismatch answers across the task. 
+In the language segment, participants took part in three speeded AX-discrimination tasks for Italian, Japanese, and Mandarin (trials automatically proceeded after 1000 ms if not responded to)\cite{Hayes‐Harb_Barrios_2021}. All Language stimuli were sampled at 44.1 kHz and recorded in sound attenuated booths (Mandarin) or studio (Japanese and Italian). The Italian and Japanese AX tasks, adapted from \cite{Tsukada_Cox_Hajek_Hirata_2017}, consisted of stop geminate contrasts: Italian - /\textipa{p t k b d g dZ}/, Japanese - /\textipa{t k tS}/. For the Italian AX task, stimuli consisted of 27 pairs of geminate contrasts (e.g., without geminate /\textipa{Eko}/ \textit{echo}, with geminate /\textipa{Ek\textlengthmark o}/ \textit{here}), which were made up of approximately half real and non-real words, spoken by three native speakers. For the Japanese AX task, stimuli consisted of 33 pairs of geminate contrasts (e.g., without geminate: /kate/ \textit{win}, with geminate: /katːe/ \textit{buying}), with approximately half of the pairs matching (e.g., without geminate high-low pitch accent /kate/, with geminate low-high pitch accent /katːe/) and mismatching (without geminate low-high pitch accent /heta/ \textit{unskilled}, without geminate low-high pitch accent /hetːa/ \textit{decreased}) in pitch-accent. The Mandarin task, adpated from \cite{Wiener_Bradley_2020}, consisted of 8 stimuli based on the Mandarin syllable yu with four tones (yu1, yu2, yu3, yu4) recorded by male and female native speakers and were normalized for F0 manipulation using \cite{Boersma_Weenink}'s method. Each tonal pairing co-occured equal amounts with each tone occurring with itself three times to equalize match-mismatch answers across the task. 
 
 The music segment has two basic tasks: auditory-motor temporal integration \cite{Kachlicka_Saito_Tierney_2019} and auditory discrimination \cite[MET;]{Wallentin_Nielsen_Friis-Olivarius_Vuust_Vuust_2010}), both of which have melody and rhythm sections. In the auditory-motor integration tasks, participants hear a rhythm (auditory-motor rhythm) or melody(auditory-motor rhythm) three times, memorizes it, and reproduces either the melodic and rhythmic pattern. For example, in the auditory-motor rhythm task each trial plays a 13 beat rhythm three times. The participant then needs needs to repeat the exact beat using the space-bar. Timing is captured on each space-bar press. Similarly, for the auditory-motor melody task a series of 7 notes are played, the participants then needs to repeat these with a series of on-screen buttons on the screen that correspond to pitches. After completion of both auditory-motor temproal integration tasks, the participant then does a auditory AX discrimination task, where two auditory music samples (melody or rhythm) are played then participants must determine if the samples were identical (melodies or drum beats) through a button press on the screen. 
 
@@ -116,7 +116,35 @@ Musical Training; e.g. formal musical training
 Self-reported Singing Abilities, e.g. one’s own singing; Emotional Engagement with Music, e.g. ability to talk about emotions in music). Finally, the participant fills out the LEAP-Q with self-reported data on their language proficiency and experience of bilingual and multilingual practices. 
 
 \subsection{Data Analysis}
-D-prime (d′) was calculated as a measure of sensitivity and to account for AX-discrimination response bias (Macmillan & Creelman, 2004).
+\subsubsection{Data Wrangling and Validation}
+
+
+Reaction time based data removal was calculated by overall trial log transformed reaction time on both the musical ear tasks (rhythm and melody). MAD was used as the removal standard, reaction time trial data outside three deviations was removed (proportion of trials removed from musical ear tasks: \livedata{taskrem}{RTmet.remove} of \livedata{taskrem}{RTmet.before} trials). Language tasks were transformed using the squareroot transformation due to larger skew that is likely due to the speeded nature of the AX tasks. No trials data was removed from language tasks due to the automatic progression of trials at 1000ms.
+
+Data removal based on accuracy was then calculated by item for both Musical Ear tasks and for each language task. The standard of three MADs was applied to each task's accuracy. Removal was conservative for each task, retained items for each task: Auditory-motor melody items \livedata{taskrem}{melody_item.after}/\livedata{taskrem}{melody_item.before}, Auditory-motor rhythm items \livedata{taskrem}{rhythm_item.after}/\livedata{taskrem}{rhythm_item.before}, Mandarin items \livedata{taskrem}{Mandarin.after}/\livedata{taskrem}{Mandarin.before}, Italian items \livedata{taskrem}{italian.after}/\livedata{taskrem}{italian.before}, Japanese items \livedata{taskrem}{japanese.after}/\livedata{taskrem}{japanese.before}. Additionally in the auditory-motor rhythm task, the first beat of every trial (rhythmic phrase) was removed. This was done because the first beat acted as the trigger for beginning the capture of rhythm. As each possible beat is 200 ms apart, the second beat of each rhythmic phrase was then centered by subtracting 100 ms, as seen in fig
+
+After data removal, Cronbach's alpha was calculated for each of the musical tasks and questionnairre as tested in original studies (i.e., Goldsmiths 5 area scores, Musical Ear melody and rhythm items, auditory-motor melody, auditory-motor rhythm) to test internal reliability of items in each task. Results as compared to original studiest are presented in Table~\ref{tab:comparison}. 
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Task} & \textbf{Reported Value} & \textbf{Our Value} \\
+\hline
+GoldSmiths \cite{Müllensiefen_Gingras_Musil_Stewart_2014} & Range: 0.79 - 0.93 & 0.89 \\
+Musical Ear tasks \cite{Wallentin_Nielsen_Friis-Olivarius_Vuust_Vuust_2010}& 0.87 & 0.79 \\
+Auditory-motor melody \cite{Kachlicka_Saito_Tierney_2019}& Unreported & 0.93 \\
+Auditory-motor rhythm\cite{Kachlicka_Saito_Tierney_2019}& Unreported & 0.91 \\
+\hline
+\end{tabular}
+\caption{Comparison of Reported and Our Cronbach's alpha values}
+\label{tab:comparison}
+\end{table}
+
+For both Musical Ear tasks and each Language task,  D-prime (d′) was calculated as a measure of sensitivity and to account for AX-discrimination response bias \cite{Macmillan_Creelman_2004}.
+
+\subsubsection{Statistical analysis}
+
 
 
 \subsection{Figures}
@@ -134,9 +162,9 @@ stuff here Figure~\ref{fig:raw_data}.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{SP_24_visuals/Normalized_score_distrubutions_by_task.pdf}
+  \includegraphics[width=\linewidth]{fig:Correct_and_Incorrect_distrubutions_by_beat_across_trial.pdf}
   \caption{Raw data}
-  \label{fig:raw_data}
+  \label{fig:beat_data}
 \end{figure}
 
 \subsection{Results}
