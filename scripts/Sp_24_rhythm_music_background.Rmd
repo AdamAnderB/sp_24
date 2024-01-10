@@ -1,6 +1,6 @@
 ---
 title: "SP_24_rhythm_music_background"
-author: "Adam A. Bramlett"
+author: "blinded"
 date: "2023-12-18"
 output:
   pdf_document: default
@@ -329,7 +329,7 @@ p1<-data_rhythm_complete%>%
         panel.grid.major.x = element_blank(),
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank())
-save_ggplot(p1,width=6,height=6)
+save_ggplot(p1,width = 3,height=3)
 
 #This plot shows mistakes from gorilla timing mechanism, which is less than .5% of the time. I am actually pretty impress with this.
 title<-"hitting beats across stimuli,participants, and beat position"
@@ -754,7 +754,7 @@ geom_density_ridges(color="white",alpha=.5)+
   scale_color_manual(values =c("black", "red","yellow"))+
   scale_y_discrete(limits=rev,
                    labels = c(italian = "Italian",japanese = "Japanese", Mandarin= "Mandarin"))+
-  labs(x = "Dprime", y = "density", fill = "\n",alpha="") +
+  labs(x = "Dprime", y = "", fill = "\n",alpha="") +
   theme_minimal()+
   theme(panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
@@ -764,7 +764,7 @@ geom_density_ridges(color="white",alpha=.5)+
   facet_grid(.~l2_coded,
              labeller = labeller(l2_coded = 
                                    c("l2 match" = "L2 match","non l2 match" = "L2 no match"))) 
-save_ggplot(p1)
+save_ggplot(p1,width = 5,height=2.5)
 
 
 ```
