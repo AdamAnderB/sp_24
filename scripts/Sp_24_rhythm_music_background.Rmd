@@ -1264,6 +1264,7 @@ cronbachs_alpha_df <- data.frame(
 )%>%
   mutate(Value=round(Value,2))
 
+#this code is somewhat problematic because it doesn't fix .001 to three digits
 dynamic_models<-all_models%>%
   mutate(Statistic = paste(model,term,sep="."))%>%
   select(Statistic,estimate,std.error,statistic,p.value,
@@ -1272,16 +1273,12 @@ dynamic_models<-all_models%>%
   pivot_longer(cols=c(estimate:conf_higher),names_to="part",values_to="Value")%>%
   mutate(Statistic=paste(Statistic,part,sep="."))%>%
   select(!part)%>%
-  mutate(Value = ifelse(grepl("p.value", Statistic) & Value < 0.001, 0.001, Value))%>%
   mutate(Value =as.numeric(Value))%>%
-  mutate(Value = case_when(grepl("p.value", Statistic) & Value <= 0.001~ 0.001,
-                           grepl("p.value", Statistic) & Value <= 0.01 & Value > 0.001 ~ 0.01,
-                           grepl("p.value", Statistic) & Value <= 0.05 & Value > 0.01 ~ 0.05,
-                           grepl("p.value", Statistic) & Value > 0.05 ~100,
-                           TRUE ~ Value))
-  #mutate(Value = format(round(Value, digits = 2), nsmall = 2))
-  
-View(age)
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value <= 0.01 & Value > 0.001, 0.01, Value))%>%
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value <= 0.05 & Value > 0.01, 0.05, Value))%>%
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value > 0.05, 100, Value))%>%
+  mutate(Value = format(round(Value, digits = 2), nsmall = 2))
+
 grepl("p.value", dynamic_models$Statistic)
 dynamic_models
 age$Value <- format(age$Value , nsmall = 2)
