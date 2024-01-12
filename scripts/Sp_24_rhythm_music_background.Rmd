@@ -27,6 +27,7 @@ library(performance)
 library(ltm)
 library(purrr)
 library(cowplot)
+library(corrplot)
 ```
 
 ```{r}
@@ -554,6 +555,8 @@ p1<-mij_data_agg_item%>%
         legend.position = "none")
 save_ggplot(p1)
 
+View(keep)
+View(remove)
 keep<-mij_data_agg_item%>%filter(remove==0)
 remove<-mij_data_agg_item%>%filter(remove==1)
 mij_data<-mij_data%>%filter(Sound1 %in% keep$Sound1)
@@ -703,10 +706,11 @@ names$updated_terms<-c("Language d'","Goldsmiths general","Goldsmiths engagement
 longer_all_data<-longer_all_data%>%
   right_join(names)%>%
   arrange(number) %>%
-  mutate(updated_tasks = factor(updated_terms, levels = unique(updated_terms)))
+  mutate(updated_tasks = factor(updated_terms, levels = unique(updated_terms)))%>%
+  filter(task != "gs_general")#adding point to split off gs_general
 
-
-key<-longer_all_data%>%select(Participant.Private.ID)
+key<-longer_all_data%>%
+  select(Participant.Private.ID)
 mij_d_prime_keyed<-mij_d_prime%>%
   right_join(key)
 
@@ -854,7 +858,6 @@ j_data<-all_data%>%filter(Spreadsheet.Name=="japanese")
 
 #Mandarin model comparisons
 m_data_m1 <- lm(language_dprime ~
-        gs_general +
         gs_activeeng +
         gs_perceptabil +
         gs_musictrain +
@@ -869,38 +872,38 @@ m_data_m1 <- lm(language_dprime ~
 summary(m_data_m1)
 
 m_data_m2 <- lm(language_dprime ~
-        gs_general +
         gs_activeeng +
         gs_perceptabil +
-        gs_musictrain +
         gs_singingabil +
         gs_emotions +
         MET_dprime_Melody +
+        MET_dprime_Rhythm +
         mean_working_memory +
+        beat_score +
         melody_score,
         data = m_data) 
 summary(m_data_m2)
 
 m_data_m3 <- lm(language_dprime ~
-        gs_general +
         gs_activeeng +
         gs_perceptabil +
-        gs_musictrain +
         gs_singingabil +
         gs_emotions +
         MET_dprime_Melody +
-        mean_working_memory,
+        mean_working_memory +
+        beat_score +
+        melody_score,
         data = m_data) 
 summary(m_data_m3)
 
 m_data_m4 <- lm(language_dprime ~
         gs_activeeng +
         gs_perceptabil +
-        gs_musictrain +
-        gs_singingabil +
         gs_emotions +
         MET_dprime_Melody +
-        mean_working_memory,
+        mean_working_memory +
+        beat_score +
+        melody_score,
         data = m_data) 
 summary(m_data_m4)
 
@@ -909,7 +912,8 @@ m_data_m5 <- lm(language_dprime ~
         gs_perceptabil +
         gs_emotions +
         MET_dprime_Melody +
-        mean_working_memory,
+        mean_working_memory +
+        melody_score,
         data = m_data) 
 summary(m_data_m5)
 
@@ -917,22 +921,117 @@ m_data_m6 <- lm(language_dprime ~
         gs_perceptabil +
         gs_emotions +
         MET_dprime_Melody +
-        mean_working_memory,
+        mean_working_memory +
+        melody_score,
         data = m_data) 
 summary(m_data_m6)
+
+m_data_m7 <- lm(language_dprime ~
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory +
+        melody_score,
+        data = m_data) 
+summary(m_data_m7)
+
+m_data_m8 <- lm(language_dprime ~
+        gs_emotions +
+        MET_dprime_Melody +
+        melody_score,
+        data = m_data) 
+summary(m_data_m8)
+
+m_data_m9 <- lm(language_dprime ~
+        gs_emotions +
+        melody_score,
+        data = m_data) 
+summary(m_data_m9)
+
+m_data_m10 <- lm(language_dprime ~
+        gs_emotions,
+        data = m_data) 
+summary(m_data_m10)
+
+m_data_m11 <- lm(language_dprime ~
+        melody_score,
+        data = m_data) 
+summary(m_data_m11)
 
 anova(m_data_m1,m_data_m2)
 anova(m_data_m2,m_data_m3)
 anova(m_data_m3,m_data_m4)
 anova(m_data_m4,m_data_m5)
 anova(m_data_m5,m_data_m6)
-#model three is the parsimonisous model due to better no co-linearity. Simplest takes into account most variance
-m_model<-m_data_m6
+anova(m_data_m6,m_data_m7)
+anova(m_data_m7,m_data_m8)
+anova(m_data_m8,m_data_m9)
+anova(m_data_m9,m_data_m10)
+anova(m_data_m10,m_data_m11)
+
+m_model<-m_data_m9
+check_model(m_model)
+```
+```{r}
+#prep for models
+centered_all_data <- all_data %>%
+  mutate(across(c(language_dprime:melody_score), ~ . - mean(. , na.rm = TRUE)))%>%
+  mutate(across(c(language_dprime:melody_score), ~ (. - min(., na.rm = TRUE)) / (max(., na.rm = TRUE) - min(., na.rm = TRUE))))
+
+m_data<-centered_all_data%>%filter(Spreadsheet.Name=="Mandarin")
+i_data<-centered_all_data%>%filter(Spreadsheet.Name=="italian")
+j_data<-centered_all_data%>%filter(Spreadsheet.Name=="japanese")
+
+
+#Mandarin model comparisons
+m_data_m1 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_musictrain +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = m_data) 
+summary(m_data_m1)
+
+m_data_m2 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory +
+        beat_score,
+        data = m_data) 
+summary(m_data_m2)
+
+m_data_m3 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory,
+        data = m_data) 
+summary(m_data_m3)
+
+m_data_m4 <- lm(language_dprime ~
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory,
+        data = m_data) 
+summary(m_data_m4)
+
+anova(m_data_m1,m_data_m2)
+anova(m_data_m2,m_data_m3)
+anova(m_data_m3,m_data_m4)
+
+#model four is the parsimonisous model due to better no co-linearity. Simplest takes into account most variance
+m_model<-m_data_m4
 
 #italian data
 #l1_coded is not here because it only has one level in the dataset so far.
 i_data_m1 <- lm(language_dprime ~
-        gs_general +
         gs_activeeng +
         gs_perceptabil +
         gs_musictrain +
@@ -948,58 +1047,38 @@ summary(i_data_m1)
 
 
 i_data_m2 <- lm(language_dprime ~
-        gs_general +
-        gs_perceptabil +
         gs_musictrain +
         gs_singingabil +
         gs_emotions +
         MET_dprime_Melody +
-        MET_dprime_Rhythm +
         mean_working_memory +
         beat_score,
         data = i_data) 
 summary(i_data_m2)
 
 i_data_m3 <- lm(language_dprime ~
-        gs_general +
         gs_singingabil +
         gs_emotions +
-        MET_dprime_Melody +
-        MET_dprime_Rhythm +
         mean_working_memory +
         beat_score,
         data = i_data) 
 summary(i_data_m3)
 
 i_data_m4 <- lm(language_dprime ~
-        gs_general +
-        gs_singingabil +
         gs_emotions +
-        MET_dprime_Rhythm +
         mean_working_memory +
         beat_score,
         data = i_data) 
 summary(i_data_m4)
 
-i_data_m5 <- lm(language_dprime ~
-        gs_general +
-        gs_singingabil +
-        MET_dprime_Rhythm +
-        mean_working_memory,
-        data = i_data) 
-summary(i_data_m5)
-
 anova(i_data_m1,i_data_m2)
 anova(i_data_m2,i_data_m3)
 anova(i_data_m3,i_data_m4)
-anova(i_data_m4,i_data_m5)
-anova(i_data_m4,i_data_m5)
 #going with model 5 to reduce colinearities completely
-i_model<-i_data_m5
+i_model<-i_data_m4
 
 #Japanese model comparison
 j_data_m1 <- lm(language_dprime ~
-        gs_general +
         gs_activeeng +
         gs_perceptabil +
         gs_musictrain +
@@ -1018,47 +1097,26 @@ j_data_m2 <- lm(language_dprime ~
         gs_singingabil +
         gs_emotions +
         MET_dprime_Melody +
-        MET_dprime_Rhythm +
         mean_working_memory +
-        beat_score +
-        melody_score,
+        beat_score,
         data = j_data) 
 summary(j_data_m2)
 
 j_data_m3 <- lm(language_dprime ~
         gs_activeeng +
         gs_singingabil +
-        gs_emotions +
         MET_dprime_Melody +
-        MET_dprime_Rhythm +
         mean_working_memory +
         beat_score,
         data = j_data) 
 summary(j_data_m3)
 
-j_data_m4 <- lm(language_dprime ~
-        gs_activeeng +
-        gs_singingabil +
-        MET_dprime_Melody +
-        mean_working_memory +
-        beat_score,
-        data = j_data) 
-summary(j_data_m4)
-
-j_data_m5 <- lm(language_dprime ~
-        gs_activeeng +
-        gs_singingabil +
-        mean_working_memory +
-        beat_score,
-        data = j_data) 
-summary(j_data_m5)
 
 anova(j_data_m1,j_data_m2)
 anova(j_data_m2,j_data_m3)
 anova(j_data_m3,j_data_m4)
-anova(j_data_m4,j_data_m5)
 #model 4 is the parsimonious model
-j_model<-j_data_m4
+j_model<-j_data_m3
 ```
 
 ```{r}
@@ -1066,6 +1124,27 @@ check_model(m_model)
 check_model(i_model)
 check_model(j_model)
 ```
+
+```{r}
+cor_data<-all_data%>%
+  select(Participant.Private.ID,c(gs_activeeng:melody_score))%>%
+  select(!c(max_working_memory,min_working_memory))%>%
+  unique()%>%
+  select(!Participant.Private.ID)
+  
+cor_matrix <- cor(cor_data, use = "complete.obs")
+
+# Visualize the correlation matrix
+corrplot(cor_matrix, method = "circle")
+corrplot(cor_matrix, method = "circle", type = "lower",addCoef.col = "black")
+titile="correlations of 11 variables"
+c1<-corrplot(cor_matrix, method = "circle", type = "lower")
+
+write.csv(cor_matrix, "data_output/corr_matrix.csv", row.names = FALSE)
+# View the correlation matrix
+print(cor_matrix)
+```
+
 
 ```{r}
 #full model
@@ -1108,7 +1187,7 @@ names<-all_models%>%
   select(term)%>%
   unique()
 names$updated_terms<-c("Intercepts",
-                       "Goldsmiths general","Goldsmiths engagement","Goldsmiths perception",
+                       "Goldsmiths engagement","Goldsmiths perception",
                        "Goldsmiths training","Goldsmiths singing","Goldsmiths emotions",
                        "Musical Ear Test d' Melody","Musical Ear Test d' Rhythm","Working-memory",
                        "Auditory-motor Rhythm","Auditory-motor Melody")
@@ -1124,7 +1203,7 @@ title="Japanese,Italian, Mandarin max models structure: parsimonious effects"
 p1<-all_models %>%
   ggplot(aes(x = updated_terms, y = estimate, color = model)) +
   geom_point(position = dodge_width,shape=19,size=3) +
-  geom_text(aes(label=significance,y=-2),position=dodge_width,width = 0.1,size=5,show_guide=F)+
+  geom_text(aes(label=significance,y=-.75),position=dodge_width,width = 0.1,size=5,show_guide=F)+
   geom_errorbar(aes(ymin = conf_lower, ymax = conf_higher), position = dodge_width, width = 0.1,linewidth=1.2) +
   scale_x_discrete(limits=rev)+
   coord_flip() + 
@@ -1132,25 +1211,29 @@ p1<-all_models %>%
   labs(
     x = "Terms",
     y = "Estimate")+
-  theme(panel.grid.minor.x = element_blank(),
+  theme(axis.title.x = element_text(hjust = .45),
+        panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         panel.grid.major.y = element_blank(),
-        legend.position = c(.75, .3),
-        legend.background = element_rect(fill="#E0E0E0",
+        legend.position = c(.85,.75),     # Move the legend to the bottom
+        legend.direction = "vertical",
+        legend.background = element_rect(fill="white",
                                   size=0, linetype="solid",
-                                  colour ="black"))+
+                                  colour ="white"))+
   geom_vline(xintercept=seq(1.5, length(unique(all_models$term))-0.5, 1), 
              lwd=.1, colour="black")+
   geom_hline(yintercept=0,lwd=.1, colour="black")+
-  scale_color_manual(values = c("#C41230", "#000000", "#719F94")) 
+  scale_color_manual(values = c("#C41230", "#000000", "#719F94"))+
+  labs(color = "Models")
 p1
 p2<-p1+guides(
   fill = guide_legend(
-    title = "Legend Title",
+    title = "Model",
     override.aes = aes(label = "")
   )
 )
-save_ggplot(p2,width = 4.5,height=4.5)
+p2
+save_ggplot(p2,width = 5,height=5)
 ```
 
 
