@@ -1,0 +1,1708 @@
+---
+title: "SP_24_rhythm_music_background"
+author: "blinded"
+date: "2023-12-18"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(conflicted)
+library(xml2)
+#detach("package:dplyr", unload = TRUE)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(tidyverse)
+library(tidyverse)
+library(ggExtra)
+library(ggridges)
+library(gghalves)
+library(psycho)
+library(GGally)
+library(corrplot)
+library(broom)
+library(performance)
+library(ltm)
+library(purrr)
+library(cowplot)
+```
+
+```{r}
+#you must have the functions script as well for this to run through and for all of the visuals,csvs, and rmds to save. If you are uninterested you can simply not do any saving.
+source("functions.R")
+#the two functions used are:
+#create_folder() and save_ggplot()
+
+#file management
+master_path<-"/Users/adambramlett/scripts/music_project_23/data"
+#data pull
+data_list <- readRDS(file.path(master_path,"rds_folder","all_experiments_combined_list_cleaned.rds"))
+```
+
+```{r}
+#gold smith
+gs_data<-data_list$Goldsmiths_Musical_Sophistication_Index_GoldMSI__Original_Version_English
+gs_data%>%ggplot(aes(x=score,fill=rating,alpha=.1))+geom_histogram(position = "identity")
+#music ear test
+met_data<-data_list$Musical_Ear_Test_MET__English_Instructions
+#rhythm data
+rhythm_data<-data_list$Rhythm_memory
+#melody data
+melody_data<-data_list$Melody_memory
+#italian data
+italian_data<-data_list$AX_Hindi_italian_Japanese_italian
+#italian data
+japanese_data<-data_list$AX_Hindi_italian_Japanese_japanese
+#mandarin data
+mandarin_data<-data_list$Mandarin_AX_Tone
+#working memory
+work_memory<-data_list$Digit_Span__Advanced
+#questionnairre
+quests<-data_list$Language_experience_questionnaire
+```
+
+```{r}
+#working memory
+title="working memory scores"
+p1<-work_memory%>%
+  ggplot(aes(x=mean_working_memory))+
+  geom_histogram()+
+  ggtitle(title)
+save_ggplot(p1)
+```
+
+```{r}
+#goldsmith cleaning
+gs_data%>%
+  mutate(Participant.Private.ID = as.factor(Participant.Private.ID ))%>%
+  ggplot(aes(x=question_content,y=score,alpha=.2))+
+  geom_jitter(aes(color = rating))+
+  geom_violin()
+
+
+gs_data_agg<-
+  gs_data%>%
+  select(-rating)%>%
+  pivot_wider(names_from = question_content,
+              values_from = score,
+              names_prefix = "gs_")
+
+  
+#reliability test
+cronbach_alpha <- cronbach.alpha(gs_data_agg%>%dplyr::select(gs_activeeng:gs_general))
+gs_cronbach_alpha<-cronbach_alpha
+print(gs_cronbach_alpha)
+```
+
+```{r}
+#Musical ear clean up
+#removal of data by Median absolute deviation(mad)
+mad_standard=3
+before_mad_removal_RTmet<-nrow(met_data)
+
+met_data_clean<-met_data %>%
+  group_by(display)%>%
+  mutate(log_rt=log(Reaction.Time))%>%
+  mutate(display_medians = median(log_rt),
+         abs_distance = abs(display_medians-log_rt),
+         mean_distance = mean(abs_distance),
+         upper_mad = display_medians+(mean_distance*mad_standard),
+         lower_mad = display_medians-(mean_distance*mad_standard))%>%
+  filter(log_rt<upper_mad &log_rt>lower_mad)
+
+after_mad_removal_RTmet<-nrow(met_data_clean)
+
+
+#showing the data
+title="Musical Ear rhythm and melody distributions"
+p1<-met_data_clean%>%ggplot(aes(x=log_rt,alpha=.2))+
+  geom_histogram()+
+  geom_point(aes(x=upper_mad,y=.5),color = "blue",size=3)+
+  geom_violin(aes(x=lower_mad,y=.5),color = "red",size=3)+
+  facet_wrap(display~.)
+save_ggplot(p1)
+
+
+#agg data
+met_data_agg<-met_data_clean%>%
+  group_by(display,Participant.Private.ID)%>%
+  summarise(score = mean(Correct))%>%
+  pivot_wider(names_from = display,values_from = score)%>%
+  mutate(met_melody_scores=Melodia,
+         met_rhythm_scores=Ritmo)%>%
+  select(-c("Melodia","Ritmo" ))
+
+
+#dprime_data
+met_d_prime<-met_data_clean%>%
+  mutate(
+    hit = if_else(Correct == 1 & Response == "Yes", 1L, 0L),
+    f_a = if_else(Correct == 0 & Response == "Yes", 1L, 0L),
+    miss = if_else(Correct == 0 & Response == "No", 1L, 0L),
+    c_r = if_else(Correct == 1 & Response == "No", 1L, 0L))%>%
+  group_by(Participant.Private.ID, display) %>%
+  summarize(
+    hit_count = sum(hit),
+    f_a_count = sum(f_a),
+    miss_count = sum(miss),
+    c_r_count = sum(c_r),
+    .groups = 'drop')%>%
+  mutate(
+    MET_dprime = dprime(hit_count, 
+                             f_a_count, 
+                             hit_count + miss_count, 
+                             f_a_count + c_r_count)$dprime,
+    MET_c = dprime(hit_count, 
+                        f_a_count, 
+                        hit_count + miss_count, 
+                        f_a_count + c_r_count)$c)%>%
+  select(Participant.Private.ID, display, MET_dprime, MET_c)%>%
+  mutate(display=case_when(display == "Ritmo"~"Rhythm",
+                           display == "Melodia"~"Melody"))%>%
+  pivot_wider(names_from = display,values_from = c(MET_dprime, MET_c))
+
+#reliability test
+cronbach_alpha <- cronbach.alpha(met_data_agg%>%select(met_melody_scores:met_rhythm_scores))
+met_cronbach_alpha<-cronbach_alpha
+print(met_cronbach_alpha)
+```
+
+```{r}
+#rhythm data
+data_rhythm_complete<-rhythm_data
+
+#rhythm removal for double beats
+data_rhythm_double<-data_rhythm_complete
+#second double beat visualized.
+#data_rhythm_complete%>%ggplot(aes(x=as.factor(double_beat),y=rt))+
+#  geom_violin()+
+#  facet_grid(1~beats_correct)
+
+#double beat removal rhythm (removing the first beat of a items from participants on screens with 2 beats)
+double_beat<-data_rhythm_double%>%
+  filter(double_beat == 1)%>%
+  arrange(rt)%>%
+  group_by(Trial.Number,Screen.Name,Participant.Private.ID)%>%
+  slice(1)
+
+#how many beat times have double beats == 0.01525637
+nrow(double_beat)/nrow(data_rhythm_complete)
+
+data_rhythm_double<-data_rhythm_double%>%
+  anti_join(double_beat,data_rhythm_double,by=c("Participant.Private.ID","Trial.Number","sound_stimuli_list","rt"))
+data_rhythm_complete<-data_rhythm_double
+
+#no items removed here.
+#item removal for each sound file
+before_mad_removal_item_rhythm<-length(unique(data_rhythm_complete$sound_stimuli_list))
+
+item_rhythm_agg<-data_rhythm_complete%>%
+  group_by(sound_stimuli_list)%>%
+  summarize(accuracy= mean(beats_correct))%>%
+  ungroup() %>%
+  mutate(display_medians = median(accuracy),
+         abs_distance = abs(display_medians-accuracy),
+         mean_distance = mean(abs_distance),
+         upper_mad = display_medians+(mean_distance*mad_standard),
+         lower_mad = display_medians-(mean_distance*mad_standard))%>%
+  filter(accuracy<upper_mad &accuracy>lower_mad)
+
+after_mad_removal_item_rhythm<-length(unique(item_rhythm_agg$sound_stimuli_list))
+#1 participants removed here.
+#participants removal
+before_mad_removal_part_rhythm<-length(unique(data_rhythm_complete$Participant.Private.ID))
+
+part_rhythm_agg<-data_rhythm_complete%>%
+  group_by(Participant.Private.ID)%>%
+  summarize(accuracy= mean(beats_correct))%>%
+  ungroup() %>%
+  mutate(display_medians = median(accuracy),
+         abs_distance = abs(display_medians-accuracy),
+         mean_distance = mean(abs_distance),
+         upper_mad = display_medians+(mean_distance*mad_standard),
+         lower_mad = display_medians-(mean_distance*mad_standard))%>%
+  filter(accuracy<upper_mad &accuracy>lower_mad)
+
+after_mad_removal_part_rhythm<-length(unique(part_rhythm_agg$Participant.Private.ID))
+
+nrow(part_rhythm_agg)-length(unique(data_rhythm_complete$Participant.Private.ID))
+nrow(item_rhythm_agg)-length(unique(data_rhythm_complete$sound_stimuli_list))
+
+#item and participant agg sheets for visualizations
+item_part_rhythm_agg<-data_rhythm_complete%>%
+  group_by(sound_stimuli_list,Participant.Private.ID)%>%
+  summarize(accuracy= mean(beats_correct))%>%
+  mutate(item_lower_mad=item_rhythm_agg$lower_mad[1],
+         item_upper_mad=item_rhythm_agg$upper_mad[1],
+         part_lower_mad=part_rhythm_agg$lower_mad[1],
+         part_upper_mad=part_rhythm_agg$upper_mad[1])
+
+title="item removal rhythm before removal-none removed"
+p1<-item_part_rhythm_agg%>%
+  ggplot(aes(y=accuracy,x=sound_stimuli_list,fill=sound_stimuli_list))+
+  geom_boxplot()+
+  geom_point(aes(y=item_lower_mad),color="red")+
+  geom_point(aes(y=item_upper_mad),color="blue")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position = "none")
+save_ggplot(p1)
+
+title="item removal rhythm before removal-9339523 removed"
+p1<-item_part_rhythm_agg%>%
+  ggplot(aes(y=accuracy,x=Participant.Private.ID,fill=Participant.Private.ID))+
+  geom_boxplot()+
+  geom_point(aes(y=part_lower_mad),color="red")+
+  geom_point(aes(y=part_upper_mad),color="blue")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position = "none")
+save_ggplot(p1)
+
+data_rhythm_complete<-data_rhythm_complete%>%
+  filter(Participant.Private.ID %in% part_rhythm_agg$Participant.Private.ID,
+         sound_stimuli_list %in% item_rhythm_agg$sound_stimuli_list)
+
+
+cb_rhythm<-item_part_rhythm_agg%>%
+  select(sound_stimuli_list,Participant.Private.ID,accuracy)%>%
+  pivot_wider(names_from = sound_stimuli_list,values_from = accuracy)
+
+cronbach_alpha <- cronbach.alpha(cb_rhythm%>%select(`1.flac`:`9.flac`))
+rhythm_cronbach_alpha<-cronbach_alpha
+print(rhythm_cronbach_alpha)
+```
+
+```{r}
+#screen2 offset timing
+data_rhythm_complete<-data_rhythm_complete%>%
+  filter(Screen.Name!=1)%>% #screen one does not have real times
+  mutate(rt=as.numeric(rt),
+         time=as.numeric(time))%>%
+  mutate(rt = if_else(Screen.Name == 2,rt-100,rt)) #needs offset for timing of
+
+title<-"Raw RTs across screen (screen 1 removed and screen 2 adjusted)"
+p1<-data_rhythm_complete%>%
+  ggplot(aes(x=as.factor(Screen.Name),y=rt,alpha=.25))+
+  geom_jitter(aes(color=as.factor(beats_correct)))+
+  geom_boxplot()+
+  ggtitle(title)+
+  facet_grid(1~beats_ans)+
+  theme_minimal()
+save_ggplot(p1)
+
+#seems normally distributed in most screens- I don't see a reason for removal here. It is interesting that they are getting more an more offbeat as a trial continues. This makes since, errors start to compile.
+# create adjusted time based on accumulation of time.
+data_rhythm_complete<-data_rhythm_complete%>%
+  mutate(rt_adjusted = rt+timer)%>%
+  mutate(rt_adjusted = if_else(Screen.Name == 1, rt_adjusted,rt_adjusted-200))
+
+title<-"Raw RTs for beats correct and incorrect"
+p1<-data_rhythm_complete%>%ggplot(aes(x=rt_adjusted,fill=as.factor(beats),alpha=.5))+
+  geom_histogram(position = 'identity',bins = 100)+
+  ggtitle(title)+
+  theme_minimal()
+save_ggplot(p1)
+
+#prepare for data visualization 
+data_rhythm_complete<-data_rhythm_complete%>%
+  mutate(Name = factor(Screen.Name, levels=c(2:13)))
+
+vlines <- data.frame(xintercepts = seq(200, 2400, by = 200))
+
+title<-"Correct and Incorrect distrubutions by beat across trial"
+p1<-data_rhythm_complete%>%
+  ggplot(aes(x = rt_adjusted, y = Name, group= interaction(as.factor(beats),as.factor(Name)),fill = as.factor(beats),show.legend = F))+
+  geom_density_ridges(color="white",alpha=.8)+
+  geom_vline(data = vlines,aes(xintercept = xintercepts),color = "#D3D3D3",alpha=.2)+
+  scale_x_continuous(limits = c(0, 2450),breaks = c(400,800,1200,1600,2000))+
+  scale_fill_manual(values =c("#FDB515","#008F91"),labels=c("0"="No beat","1"="Beat"))+
+  scale_y_discrete(limits=rev)+
+  labs(x = "Time course (ms)", y = "Beat number within trial", fill = "",alpha="") +
+  theme_minimal()+
+  theme(legend.position = c(.8, .8),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.y = element_blank())
+save_ggplot(p1,width = 5,height=5)
+
+#This plot shows mistakes from gorilla timing mechanism, which is less than .5% of the time. I am actually pretty impress with this.
+title<-"hitting beats across stimuli,participants, and beat position"
+plot1<-data_rhythm_complete%>%ggplot(aes(x=rt,y=as.factor(beats_ans),fill= as.factor(beats_ans),alpha=.01,color = as.factor(beats_correct)))+
+  #geom_errorbar(aes(xmin = timer, xmax = timer+200,y= as.factor(beats_ans)),color = "blue")+
+  geom_jitter()+
+  scale_x_continuous(breaks=seq(0,200,by=200))+
+  theme(#legend.position = "none",
+        # remove the vertical grid lines
+        panel.grid.major.y = element_blank() ,
+        panel.grid.minor.y = element_blank()  , 
+        # explicitly set the horizontal lines (or they will disappear too)
+        panel.grid.major.x = element_line(size=.5), 
+        panel.grid.minor.x = element_line(size=.5))+
+  theme_minimal()+
+  ggtitle(title)+
+  ylab("has a beat")
+p1<-ggMarginal(plot1, groupColour = TRUE,groupFill = TRUE,margins = "x")
+save_ggplot(p1)
+
+cleaned_rhythm_agg<-data_rhythm_complete%>%
+  group_by(Participant.Private.ID)%>%
+  summarize(beat_score = mean(beats_correct))
+```
+
+```{r}
+#melody participant and item removal
+
+#item and participant removal
+#no items removed here.
+#item removal for each sound file
+data_melody_full<-melody_data
+before_mad_removal_item_melody<-length(unique(data_melody_full$sound_stimuli_list))
+
+item_melody_agg<-data_melody_full%>%
+  group_by(sound_stimuli_list,Participant.Private.ID)%>%
+  summarize(accuracy= mean(melody_correct))
+
+item_melody_agg%>%
+  ggplot(aes(y=accuracy,x=0,fill=sound_stimuli_list))+
+  geom_violin()
+
+item_melody_agg%>%
+  ggplot(aes(y=accuracy,x=0,fill=Participant.Private.ID))+
+  geom_violin()
+
+item_melody_agg<-data_melody_full%>%
+  group_by(sound_stimuli_list)%>%
+  summarize(accuracy= mean(melody_correct))%>%
+  ungroup() %>%
+  mutate(display_medians = median(accuracy),
+         abs_distance = abs(display_medians-accuracy),
+         mean_distance = mean(abs_distance),
+         upper_mad = display_medians+(mean_distance*mad_standard),
+         lower_mad = display_medians-(mean_distance*mad_standard))%>%
+  filter(accuracy<upper_mad &accuracy>lower_mad)
+
+after_mad_removal_item_melody<-length(unique(item_melody_agg$sound_stimuli_list))
+
+#1 participants removed here.
+#participants removal
+before_mad_removal_part_melody<-length(unique(data_melody_full$Participant.Private.ID))
+
+part_melody_agg<-data_melody_full%>%
+  group_by(Participant.Private.ID)%>%
+  summarize(accuracy= mean(melody_correct))%>%
+  ungroup() %>%
+  mutate(display_medians = median(accuracy),
+         abs_distance = abs(display_medians-accuracy),
+         mean_distance = mean(abs_distance),
+         upper_mad = display_medians+(mean_distance*mad_standard),
+         lower_mad = display_medians-(mean_distance*mad_standard))%>%
+  filter(accuracy<upper_mad &accuracy>lower_mad)
+
+after_mad_removal_part_melody<-length(unique(part_melody_agg$Participant.Private.ID))
+
+nrow(part_melody_agg)-length(unique(data_melody_full$Participant.Private.ID))
+nrow(item_melody_agg)-length(unique(data_melody_full$sound_stimuli_list))
+#item and participant agg sheets for visualizations
+item_part_melody_agg<-data_melody_full%>%
+  group_by(sound_stimuli_list,Participant.Private.ID)%>%
+  summarize(accuracy= mean(melody_correct))%>%
+  mutate(item_lower_mad=item_melody_agg$lower_mad[1],
+         item_upper_mad=item_melody_agg$upper_mad[1],
+         part_lower_mad=part_melody_agg$lower_mad[1],
+         part_upper_mad=part_melody_agg$upper_mad[1])
+
+title="item removal melody before removal-7.flac removed"
+p1<-item_part_melody_agg%>%
+  ggplot(aes(y=accuracy,x=sound_stimuli_list,fill=sound_stimuli_list))+
+  geom_boxplot()+
+  geom_point(aes(y=item_lower_mad),color="red")+
+  geom_point(aes(y=item_upper_mad),color="blue")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position = "none")
+save_ggplot(p1)
+
+title="item removal melody before removal-none removed"
+p1<-item_part_melody_agg%>%
+  ggplot(aes(y=accuracy,x=Participant.Private.ID,fill=Participant.Private.ID))+
+  geom_boxplot()+
+  geom_point(aes(y=part_lower_mad),color="red")+
+  geom_point(aes(y=part_upper_mad),color="blue")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position = "none")
+save_ggplot(p1)
+
+data_melody_full<-data_melody_full%>%
+  filter(Participant.Private.ID %in% part_melody_agg$Participant.Private.ID,
+         sound_stimuli_list %in% item_melody_agg$sound_stimuli_list)
+
+cb_melody<-item_part_melody_agg%>%
+  select(sound_stimuli_list,Participant.Private.ID,accuracy)%>%
+  pivot_wider(names_from = sound_stimuli_list,values_from = accuracy)
+
+cronbach_alpha <- cronbach.alpha(cb_melody%>%select(`1.flac`:`9.flac`))
+melody_cronbach_alpha<-cronbach_alpha
+print(melody_cronbach_alpha)
+```
+
+
+```{r}
+#melody visualization
+data_melody_full<-data_melody_full%>%
+  mutate(melody_correct = if_else(melody_responses==melody_ans,1,0),
+         direction_incorrect = melody_responses-melody_ans,
+         error_type = if_else(direction_incorrect == 0, "Correct",
+                              if_else(direction_incorrect > 0, "sharp","flat")))
+
+melody_agg<-data_melody_full%>%
+  group_by(Participant.Private.ID,sound_stimuli_list)%>%
+  summarize(melody_accuracy = mean(melody_correct))
+
+title="distroibution of correct flats and sharps for melody task"
+plot2<-data_melody_full%>%
+  ggplot()+
+  geom_jitter(aes(x=Screen.Name,y=direction_incorrect,color= error_type))+
+  theme_minimal()+
+  ggtitle(title)+
+  ylab("pitch high and low")+
+  xlab("sequence of melody")
+p1<-ggMarginal(plot2, groupColour = TRUE,groupFill = TRUE,margins = "y")
+save_ggplot(p1)
+
+cleaned_melody_agg<-melody_agg%>%
+  group_by(Participant.Private.ID)%>%
+  summarize(melody_score = mean(melody_accuracy))
+```
+
+```{r}
+#explore data
+#no removal was done here
+mij_data<-mandarin_data%>%
+  bind_rows(italian_data)%>%
+  bind_rows(japanese_data)%>%
+  mutate(RT=as.numeric(Reaction.Time),
+         sqrt_rt=sqrt(RT))
+#rt removal
+title<-"RT across language AX tasks"
+p1<-mij_data%>%
+  ggplot(aes(x=RT,fill=as.factor(Spreadsheet.Name),alpha=.1))+
+  geom_histogram(position ="identity")+theme_minimal()
+save_ggplot(p1)
+
+title<-"sqrt-RT across language AX tasks"
+p1<-mij_data%>%
+  ggplot(aes(x=sqrt_rt,fill=as.factor(Spreadsheet.Name),alpha=.1))+
+  geom_histogram(position ="identity")+
+  theme_minimal()+
+  ggtitle(title)
+save_ggplot(p1)
+
+#removal based on participant accuracy
+mij_data_agg_part<-mij_data%>%
+  group_by(Spreadsheet.Name,Participant.Private.ID)%>%
+  summarize(accuracy = sum(Answer_correct)/n())
+
+
+title<-"accuracy by participant with lines between tasks for each participant"
+p1<-mij_data_agg_part%>%ggplot()+
+  geom_point(aes(x=Spreadsheet.Name,y=accuracy,fill=Spreadsheet.Name,group = Participant.Private.ID,alpha=.2))+
+  geom_line(aes(x=Spreadsheet.Name,y=accuracy,color=as.factor(Participant.Private.ID),group = as.factor(Participant.Private.ID),alpha=.2))+
+  theme_minimal()+
+  geom_violin(aes(x=Spreadsheet.Name,y=accuracy,fill=Spreadsheet.Name,alpha=.2))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position = "none")
+save_ggplot(p1)
+
+mij_data_agg_item<-mij_data%>%
+  group_by(Spreadsheet.Name,Sound1)%>%
+  summarize(accuracy = sum(Answer_correct)/n())
+
+title<-"accuracy by item with lines between tasks for each participant"
+p1<-mij_data_agg_item%>%ggplot()+
+  geom_jitter(aes(x=Spreadsheet.Name,y=accuracy,fill=Spreadsheet.Name,group = Sound1,alpha=.2))+
+  geom_line(aes(x=Spreadsheet.Name,y=accuracy,color=as.factor(Sound1),group = as.factor(Sound1),alpha=.2))+
+  theme_minimal()+
+  geom_violin(aes(x=Spreadsheet.Name,y=accuracy,fill=Spreadsheet.Name,alpha=.2))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position = "none")
+save_ggplot(p1)
+
+#item removal
+#removal by Median Absolute Deviation (MAD)
+mij_data_agg_item<-mij_data%>%
+group_by(Sound1,Spreadsheet.Name)%>%
+  summarize(accuracy= mean(Answer_correct))%>%
+  ungroup() %>%
+  group_by(Spreadsheet.Name)%>%
+  mutate(display_medians = median(accuracy),
+         abs_distance = abs(display_medians-accuracy),
+         mean_distance = mean(abs_distance),
+         upper_mad = display_medians+(mean_distance*mad_standard),
+         lower_mad = display_medians-(mean_distance*mad_standard))%>%
+  mutate(remove=if_else(accuracy<upper_mad &accuracy>lower_mad,0,1))
+
+#visualization of removal
+title="item removal mij before removal: 7 items removed"
+p1<-mij_data_agg_item%>%
+  ggplot(aes(y=accuracy,x=Spreadsheet.Name,color=remove))+
+  geom_violin()+
+  geom_point()+
+  geom_point(aes(y=lower_mad),color="red")+
+  geom_point(aes(y=upper_mad),color="blue")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position = "none")
+save_ggplot(p1)
+
+View(keep)
+View(remove)
+keep<-mij_data_agg_item%>%filter(remove==0)
+remove<-mij_data_agg_item%>%filter(remove==1)
+mij_data<-mij_data%>%filter(Sound1 %in% keep$Sound1)
+
+lang_items<-mij_data_agg_item%>%
+  group_by(Spreadsheet.Name)%>%
+  summarize(before=n())%>%
+  left_join(remove%>%
+              group_by(Spreadsheet.Name)%>%
+              summarize(remove=n()))
+            
+lang_items<-lang_items%>%
+  mutate(remove= ifelse(is.na(remove), 0, remove),
+         Statistic=Spreadsheet.Name)%>%
+  select(!Spreadsheet.Name)
+
+
+#Participant removal
+#removal by Median Absolute Deviation (MAD)
+mij_data_agg_part<-mij_data%>%
+group_by(Participant.Private.ID)%>%
+  summarize(accuracy= mean(Answer_correct))%>%
+  ungroup() %>%
+  mutate(display_medians = median(accuracy),
+         abs_distance = abs(display_medians-accuracy),
+         mean_distance = mean(abs_distance),
+         upper_mad = display_medians+(mean_distance*mad_standard),
+         lower_mad = display_medians-(mean_distance*mad_standard))%>%
+  mutate(remove=if_else(accuracy<upper_mad &accuracy>lower_mad,0,1))
+
+title="part removal mij before removal-three removed"
+p1<-mij_data_agg_part%>%
+  ggplot(aes(y=accuracy,x=0,color=remove))+
+  geom_violin()+
+  geom_jitter()+
+  geom_point(aes(y=lower_mad),color="red")+
+  geom_point(aes(y=upper_mad),color="blue")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.position = "none")
+save_ggplot(p1)
+
+keep<-mij_data_agg_part%>%filter(remove==0)
+remove<-mij_data_agg_part%>%filter(remove==1)
+mij_data<-mij_data%>%
+  filter(Participant.Private.ID %in% keep$Participant.Private.ID)
+
+lang_parts<-mij_data_agg_part%>%
+  group_by(Participant.Private.ID)%>%
+  summarize(before=n())%>%
+  left_join(remove%>%
+              group_by(Participant.Private.ID)%>%
+              summarize(remove=n()))
+            
+lang_parts<-lang_parts%>%
+  mutate(remove= ifelse(is.na(remove), 0, remove))%>%
+  summarize(Statistic="particip_remove_lang",before=sum(before),remove=sum(remove))
+```
+
+```{r}
+#dprime
+#calculate d'
+same = "m"
+diff = "z"
+# Calculate d' for each language in one step
+mij_d_prime <- mij_data %>%
+  mutate(
+    hit = if_else(correct_answer == same & Response == same, 1L, 0L),
+    f_a = if_else(correct_answer == diff & Response == same, 1L, 0L),
+    miss = if_else(correct_answer == same & Response == diff, 1L, 0L),
+    c_r = if_else(correct_answer == diff & Response == diff, 1L, 0L))%>%
+  group_by(Participant.Private.ID, Spreadsheet.Name) %>%
+  summarize(
+    hit_count = sum(hit),
+    f_a_count = sum(f_a),
+    miss_count = sum(miss),
+    c_r_count = sum(c_r),
+    .groups = 'drop')%>%
+  mutate(
+    language_dprime = dprime(hit_count, 
+                             f_a_count, 
+                             hit_count + miss_count, 
+                             f_a_count + c_r_count)$dprime,
+    language_c = dprime(hit_count, 
+                        f_a_count, 
+                        hit_count + miss_count, 
+                        f_a_count + c_r_count)$c)%>%
+  select(Participant.Private.ID, Spreadsheet.Name, language_dprime, language_c)
+
+all_data<-mij_d_prime%>%
+  inner_join(gs_data_agg)%>%
+  inner_join(met_d_prime)%>%
+  inner_join(work_memory)%>%
+  inner_join(cleaned_rhythm_agg)%>%
+  inner_join(cleaned_melody_agg)%>%
+  inner_join(quests)%>%
+  select(Participant.Private.ID,experiment,most_played_instrument,education,everything())%>%
+  mutate(across(gs_activeeng:gs_general, ~ . / 100*2))%>%
+  select(Participant.Private.ID,Spreadsheet.Name,everything())%>%
+  select(-language_c)
+
+removed_for_l1<-all_data%>%
+  mutate(eng_l1=if_else(lang_dominance_order_1 == "English"|lang_dominance_order_1 == "english",1,0))%>%
+  filter(eng_l1==0)%>%
+  select(Participant.Private.ID)%>%
+  unique()
+
+all_data<-all_data%>%
+  mutate(eng_l1=if_else(lang_dominance_order_1 == "English"|lang_dominance_order_1 == "english",1,0))%>%
+  filter(eng_l1==1)
+
+all_data_centered_naught<-all_data%>%
+  mutate(number_of_langs=as.numeric(number_of_langs),
+    across(language_dprime:number_of_langs, ~ . - mean(.)),
+    mean_working_memory=mean_working_memory*10,
+    language_dprime=language_dprime*2,
+    melody_score = melody_score*1.5,
+    beat_score = beat_score*1.5)
+
+longer_all_data<-all_data_centered_naught%>%
+  select(Participant.Private.ID:melody_score)%>%
+  select(-c(max_working_memory,min_working_memory))%>%
+  mutate(mean_working_memory = mean_working_memory/10)%>%
+pivot_longer(cols = c(language_dprime:melody_score), names_to = "task",values_to="values")%>%
+  mutate(task_type = case_when(
+    str_detect(task, "gs") ~ "gs",
+    str_detect(task, "MET") ~ "met",
+    str_detect(task, "score") ~ "hand",
+    str_detect(task, "language") ~ "language"))%>%
+  filter(task != "MET_c_Melody")%>%
+  filter(task != "MET_c_Rhythm")
+
+longer_all_data$task<-as.factor(longer_all_data$task)
+longer_all_data$task <- factor(longer_all_data$task, levels = c("gs_activeeng","gs_emotions", "gs_general","gs_musictrain","gs_perceptabil","gs_singingabil", "beat_score","melody_score",        "MET_dprime_Melody","MET_dprime_Rhythm","mean_working_memory","language_dprime"))
+
+
+names<-longer_all_data%>%
+  select(task)%>%
+  unique()%>%
+  mutate(number=c(1,3,4,5,6,7,2,8,9,10,11,12))%>%
+  arrange(number)
+
+names$updated_terms<-c("Language d'","Goldsmiths general","Goldsmiths engagement","Goldsmiths perception",
+                       "Goldsmiths training","Goldsmiths singing","Goldsmiths emotions",
+                       "Musical Ear Test d' Melody","Musical Ear Test d' Rhythm","Working-memory",
+                       "Auditory-motor Rhythm","Auditory-motor Melody")
+
+longer_all_data<-longer_all_data%>%
+  right_join(names)%>%
+  arrange(number) %>%
+  mutate(updated_tasks = factor(updated_terms, levels = unique(updated_terms)))%>%
+  filter(task != "gs_general")#adding point to split off gs_general
+
+key<-longer_all_data%>%
+  select(Participant.Private.ID)
+mij_d_prime_keyed<-mij_d_prime%>%
+  right_join(key)
+
+title<-"dprime density across tasks"
+p1<-mij_d_prime_keyed%>%
+  ggplot(aes(y=Spreadsheet.Name,x=language_dprime,group= interaction(as.factor(Spreadsheet.Name)),show.legend = F))+
+geom_density_ridges(color="white",alpha=.5)+
+  scale_x_continuous(limits = c(0, 3),breaks = c(0,1,2,3))+
+  scale_fill_manual(values =c("black", "red","yellow"))+
+  scale_color_manual(values =c("black", "red","yellow"))+
+  scale_y_discrete(limits=rev,
+                   labels = c(italian = "Italian",japanese = "Japanese", Mandarin= "Mandarin"))+
+  labs(x = "Dprime", y = "", fill = "\n",alpha="") +
+  theme_minimal()+
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.y = element_blank(),
+        legend.position = c(.5, .25))
+save_ggplot(p1,width = 5,height=2.5)
+```
+```{r}
+#viz for musical questionnaire
+gs_data_agg_viz<-
+  gs_data%>%
+  #select(-rating)%>%
+  pivot_wider(names_from = question_content,
+              values_from = c(rating,score),
+              names_prefix = "gs_")
+
+colnames(gs_data_agg_viz) <- sub("score_", "", colnames(gs_data_agg_viz))
+
+gs_data_agg_viz<-gs_data_agg_viz%>%
+  ungroup()%>%
+  select(Participant.Private.ID,c(rating_gs_activeeng:rating_gs_general))%>%
+  pivot_longer(cols=c(rating_gs_activeeng:rating_gs_general),names_to = "cats",values_to="ratings")%>%
+  filter(cats =="rating_gs_general")
+
+#for language specific
+tester<-longer_all_data%>%
+  left_join(gs_data_agg_viz)%>%
+  mutate(ratings = factor(ratings, levels = c("Basic", "Average","Higher than average")))
+
+title="by gs"
+p1 <- tester %>%
+  ggplot(aes(x = updated_tasks, y = values, color = ratings)) +
+  geom_line(aes(group = interaction(Participant.Private.ID, Spreadsheet.Name, color = ratings)), alpha = .3, size = .3) +
+  geom_point(size = 5, shape = 21, color = NA, show.legend = TRUE) +  # Adjusted geom_point
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  facet_grid(.~Spreadsheet.Name) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.position = "none",
+        strip.text.x = element_blank(),
+        plot.margin = margin(-.2, 0, 0, 0, "cm")) +
+  coord_flip() +
+  scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
+  scale_x_discrete(limits = rev) +
+  xlab("") +
+  ylab("Normalized and Centered on zero values") +
+  guides(color = guide_legend(override.aes = list(shape = 21, size = 5)))  # Adjusted guides
+
+density_data<-tester%>%
+  select(Spreadsheet.Name,updated_tasks,ratings,values)%>%
+  filter(updated_tasks == "Language d'")
+
+density_plot <- 
+  ggplot(density_data, aes(values, fill = ratings)) + 
+    geom_density(color = "white",alpha=.3) +
+    theme_void() +
+    labs(fill = "GoldSmiths General Rankings")+
+    theme(legend.position = "top",
+        plot.margin = margin(0, 0, 0, 0, "cm"))+
+    facet_grid(.~Spreadsheet.Name, labeller = labeller(Spreadsheet.Name = c(italian = "Italian", japanese = "Japanese", Mandarin = "Mandarin")))+
+    scale_color_manual(values = c("#800080", "#008000", "#FFA500")) +  # Purple, Green, Orange
+    scale_fill_manual(values = c("#800080", "#008000", "#FFA500")) 
+
+empty_plot <- ggplot() + 
+              theme_void() + 
+              theme(plot.background = element_blank())
+
+combined_plot <- plot_grid(
+  plot_grid(empty_plot, density_plot, ncol = 2, rel_widths = c(2, 12)),  # Adjust 1 and 4 for the spacer and plot width
+  p1,
+  ncol = 1,
+  rel_heights = c(1, 4)  # Adjust for relative heights
+)
+save_ggplot(combined_plot,width=10,height=4)
+
+
+title<-"gs density across tasks"
+p1<-tester %>%
+  ggplot() +
+  geom_density_ridges(color = "white", alpha = 0.5,aes(x = values,
+             y = as.factor(updated_tasks),
+             fill = as.factor(ratings))) +
+  theme_minimal() +
+  theme(
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    legend.position="bottom"
+  )+
+  facet_grid(.~Spreadsheet.Name)
+save_ggplot(p1)
+```
+
+
+````{r}
+#just for exploration
+title<-"dtasks connection students1"
+
+pd <- position_dodge(0.4)
+p1 <- tester %>%
+  ggplot(aes(x = updated_tasks, y = values, color = ratings)) +
+  geom_line(position = pd,aes(group = interaction(Participant.Private.ID, ratings,Spreadsheet.Name)), 
+            alpha = 1, size = .3) +
+  geom_point(position = pd,size = 1.3, shape = 21, fill = "white", show.legend = TRUE) +  # Adjusted geom_point
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(color = "Goldsmiths General \n Score-rankings")+
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        strip.text.x = element_blank(),
+        legend.position = c(.25, .35),     # Move the legend to the bottom
+        legend.direction = "vertical") +
+  coord_flip() +
+  scale_color_manual(values = c("#800080", "#008000", "#FFA500"))+
+  scale_x_discrete(limits = rev) +
+  xlab("") +
+  ylab("Normalized and Centered on zero values")
+save_ggplot(p1,width = 6,height = 8)
+```
+
+```{r}
+#prep for models
+m_data<-all_data%>%filter(Spreadsheet.Name=="Mandarin")
+i_data<-all_data%>%filter(Spreadsheet.Name=="italian")
+j_data<-all_data%>%filter(Spreadsheet.Name=="japanese")
+
+
+#Mandarin model comparisons
+m_data_m1 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_musictrain +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = m_data) 
+summary(m_data_m1)
+
+m_data_m2 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = m_data) 
+summary(m_data_m2)
+
+m_data_m3 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = m_data) 
+summary(m_data_m3)
+
+m_data_m4 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = m_data) 
+summary(m_data_m4)
+
+m_data_m5 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory +
+        melody_score,
+        data = m_data) 
+summary(m_data_m5)
+
+m_data_m6 <- lm(language_dprime ~
+        gs_perceptabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory +
+        melody_score,
+        data = m_data) 
+summary(m_data_m6)
+
+m_data_m7 <- lm(language_dprime ~
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory +
+        melody_score,
+        data = m_data) 
+summary(m_data_m7)
+
+m_data_m8 <- lm(language_dprime ~
+        gs_emotions +
+        MET_dprime_Melody +
+        melody_score,
+        data = m_data) 
+summary(m_data_m8)
+
+m_data_m9 <- lm(language_dprime ~
+        gs_emotions +
+        melody_score,
+        data = m_data) 
+summary(m_data_m9)
+
+m_data_m10 <- lm(language_dprime ~
+        gs_emotions,
+        data = m_data) 
+summary(m_data_m10)
+
+m_data_m11 <- lm(language_dprime ~
+        melody_score,
+        data = m_data) 
+summary(m_data_m11)
+
+anova(m_data_m1,m_data_m2)
+anova(m_data_m2,m_data_m3)
+anova(m_data_m3,m_data_m4)
+anova(m_data_m4,m_data_m5)
+anova(m_data_m5,m_data_m6)
+anova(m_data_m6,m_data_m7)
+anova(m_data_m7,m_data_m8)
+anova(m_data_m8,m_data_m9)
+anova(m_data_m9,m_data_m10)
+anova(m_data_m10,m_data_m11)
+
+m_model<-m_data_m9
+check_model(m_model)
+```
+```{r}
+#prep for models
+centered_all_data <- all_data %>%
+  mutate(across(c(language_dprime:melody_score), ~ . - mean(. , na.rm = TRUE)))%>%
+  mutate(across(c(language_dprime:melody_score), ~ (. - min(., na.rm = TRUE)) / (max(., na.rm = TRUE) - min(., na.rm = TRUE))))
+
+m_data<-centered_all_data%>%filter(Spreadsheet.Name=="Mandarin")
+i_data<-centered_all_data%>%filter(Spreadsheet.Name=="italian")
+j_data<-centered_all_data%>%filter(Spreadsheet.Name=="japanese")
+
+
+#Mandarin model comparisons
+m_data_m1 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_musictrain +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = m_data) 
+summary(m_data_m1)
+
+m_data_m2 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        mean_working_memory +
+        melody_score,
+        data = m_data) 
+summary(m_data_m2)
+
+m_data_m3 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_perceptabil +
+        gs_emotions +
+        mean_working_memory +
+        melody_score,
+        data = m_data) 
+summary(m_data_m3)
+
+m_data_m4 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_emotions +
+        mean_working_memory +
+        melody_score,
+        data = m_data) 
+summary(m_data_m4)
+
+m_data_m5 <- lm(language_dprime ~
+        gs_emotions +
+        mean_working_memory +
+        melody_score,
+        data = m_data) 
+summary(m_data_m5)
+
+m_data_m6 <- lm(language_dprime ~
+        gs_emotions +
+        melody_score,
+        data = m_data) 
+summary(m_data_m6)
+
+anova(m_data_m1,m_data_m2)
+anova(m_data_m2,m_data_m3)
+anova(m_data_m3,m_data_m4)
+anova(m_data_m4,m_data_m5)
+anova(m_data_m5,m_data_m6)
+anova(m_data_m6,m_data_m7)
+anova(m_data_m7,m_data_m8)
+anova(m_data_m8,m_data_m9)
+anova(m_data_m9,m_data_m10)
+anova(m_data_m10,m_data_m11)
+
+m_model<-m_data_m6
+check_model(m_model)
+```
+```{r}
+#prep for models
+centered_all_data <- all_data %>%
+ # mutate(across(c(language_dprime:melody_score), ~ . - mean(. , na.rm = TRUE)))%>%
+  #mutate(across(c(language_dprime:melody_score), ~ (. - min(., na.rm = TRUE)) / (max(., na.rm = TRUE) - min(., na.rm = TRUE))))%>%
+  select(Participant.Private.ID:melody_score)%>%
+  select(c(Participant.Private.ID:gs_emotions),MET_dprime_Melody,MET_dprime_Rhythm,c(mean_working_memory:melody_score))
+  pivot_longer(cols=gs_activeeng:melody_score,names_to = "task",values_to = "scores")%>%
+  mutate(rhythm=if_else(grepl("hythm|beat", task),1,0),
+         melody=if_else(grepl("elody", task),1,0),
+         perception=if_else(grepl("MET", task),1,0),
+         production=if_else(grepl("_score", task),1,0),
+         gold_smiths=if_else(grepl("gs_", task),1,0),
+         working_memory=if_else(grepl("working", task),1,0),
+         skill=if_else(melody==1|rhythm==1,1,0),
+         music=if_else(gold_smiths==1|gold_smiths==1,1,0))%>%
+  mutate(across(c(rhythm:music), as.factor))
+
+
+m_data<-centered_all_data%>%filter(Spreadsheet.Name=="Mandarin")
+i_data<-centered_all_data%>%filter(Spreadsheet.Name=="italian")
+j_data<-centered_all_data%>%filter(Spreadsheet.Name=="japanese")
+
+m_data_m1 <- lm(language_dprime ~scores+production+rhythm+
+                  scores:perception+
+                  scores:production+
+                  scores:rhythm+
+                  scores:melody,
+        data=m_data)
+summary(m_data_m1)
+
+m_data_m1 <- lm(language_dprime ~
+                  melody+rhythm+
+                  scores:melody+
+                  scores:rhythm,
+        data=m_data)
+summary(m_data_m1)
+
+
+m_data_m2 <- lmerTest::lmer(language_dprime ~
+                  melody+rhythm+gold_smiths+perception+
+                  (scores:melody)+
+                  (scores:rhythm)+
+                  (scores:gold_smiths)+
+                  (scores:perception)+
+                  (1|task),
+        data=j_data)
+summary(m_data_m2)
+
+m_data_m3 <- lmerTest::lmer(language_dprime ~
+                  melody+rhythm+gold_smiths+perception+
+                  (scores:melody)+
+                  (scores:rhythm)+
+                  (scores:gold_smiths)+
+                  (1|task),
+        data=m_data)
+summary(m_data_m3)
+
+m_data_m4 <- lmerTest::lmer(language_dprime ~
+                  melody+rhythm+perception+
+                  (scores:melody)+
+                  (scores:rhythm)+
+                  (scores:gold_smiths)+
+                  (1|task),
+        data=m_data)
+summary(m_data_m4)
+
+m_data_m5 <- lmerTest::lmer(language_dprime ~
+                  melody+rhythm+perception+
+                  (scores:melody)+
+                  (scores:rhythm)+
+                  (1|task),
+        data=m_data)
+summary(m_data_m5)
+
+m_data_m5 <- lmerTest::lmer(language_dprime ~
+                  melody+rhythm+
+                  (scores:melody)+
+                  (scores:rhythm)+
+                  (1|task),
+        data=m_data)
+summary(m_data_m5)
+
+anova(m_data_m1,m_data_m2)
+anova(m_data_m2,m_data_m3)
+anova(m_data_m3,m_data_m4)
+anova(m_data_m4,m_data_m5)
+anova(m_data_m5,m_data_m6)
+
+
+```  
+
+```{r}
+#prep for models
+summary(centered_all_data)
+centered_all_data <- all_data %>%
+  mutate(across(c(language_dprime:melody_score), ~ . - mean(. , na.rm = TRUE)))%>%
+  mutate(across(c(language_dprime:melody_score), ~ (. - min(., na.rm = TRUE)) / (max(., na.rm = TRUE) - min(., na.rm = TRUE))))%>%
+  select(Participant.Private.ID:melody_score)%>%
+  select(c(Participant.Private.ID:language_dprime),mean_working_memory,c(gs_activeeng:gs_emotions),MET_dprime_Melody,MET_dprime_Rhythm,beat_score,melody_score)%>%
+  pivot_longer(cols=c(gs_activeeng:gs_emotions),names_to = "gs_tasks",values_to = "gs_scores")%>%
+  pivot_longer(cols=c(MET_dprime_Melody,melody_score),names_to = "melody_tasks",values_to = "melody_scores")%>%
+  pivot_longer(cols=c(beat_score,MET_dprime_Rhythm),names_to = "beat_tasks",values_to = "beat_scores")
+
+
+
+
+  mutate(rhythm=if_else(grepl("hythm|beat", task),1,0),
+         melody=if_else(grepl("elody", task),1,0),
+         perception=if_else(grepl("MET", task),1,0),
+         production=if_else(grepl("_score", task),1,0),
+         gold_smiths=if_else(grepl("gs_", task),1,0),
+         working_memory=if_else(grepl("working", task),1,0),
+         skill=if_else(melody==1|rhythm==1,1,0),
+         music=if_else(gold_smiths==1|gold_smiths==1,1,0))%>%
+  mutate(across(c(rhythm:music), as.factor))
+
+
+m_data<-centered_all_data%>%filter(Spreadsheet.Name=="Mandarin")
+i_data<-centered_all_data%>%filter(Spreadsheet.Name=="italian")
+j_data<-centered_all_data%>%filter(Spreadsheet.Name=="japanese")
+
+m_data_m1 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores*beat_tasks*beat_scores,
+        data=m_data)
+summary(m_data_m1)
+
+m_data_m2 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores+beat_tasks*beat_scores,
+        data=m_data)
+summary(m_data_m2)
+
+m_data_m3 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores+beat_tasks+beat_scores,
+        data=m_data)
+summary(m_data_m3)
+
+m_data_m4 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks+gs_scores+
+                              melody_tasks*melody_scores+beat_tasks*beat_scores,
+        data=m_data)
+summary(m_data_m4)
+
+m_data_m5 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks+gs_scores+
+                              melody_tasks*melody_scores+beat_tasks+beat_scores,
+        data=m_data)
+summary(m_data_m5)
+
+m_data_m6 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks+gs_scores+
+                              melody_tasks*melody_scores+beat_tasks+beat_scores,
+        data=m_data)
+
+summary(m_data_m4)
+check_model(m_data_m4)
+anova(m_data_m1,m_data_m2)
+anova(m_data_m2,m_data_m3)
+anova(m_data_m3,m_data_m4)
+anova(m_data_m4,m_data_m5)
+anova(m_data_m5,m_data_m6)
+m_model<-m_data_m2
+```
+
+```{r}
+#italian
+i_data_m1 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores*beat_tasks*beat_scores,
+        data=i_data)
+summary(i_data_m1)
+
+i_data_m2 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores+beat_tasks*beat_scores,
+        data=i_data)
+summary(i_data_m2)
+
+i_data_m3 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores+beat_tasks+beat_scores,
+        data=i_data)
+summary(i_data_m3)
+
+i_data_m4 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks+gs_scores+
+                              melody_tasks+melody_scores+beat_tasks+beat_scores,
+        data=i_data)
+summary(i_data_m4)
+
+i_data_m5 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks+gs_scores+
+                              beat_tasks+beat_scores,
+        data=i_data)
+summary(i_data_m5)
+
+i_data_m6 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks+gs_scores+
+                              beat_scores,
+        data=i_data)
+summary(i_data_m6)
+
+i_data_m7 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_scores+
+                              beat_scores,
+        data=i_data)
+summary(i_data_m7)
+
+anova(i_data_m1,i_data_m2)
+anova(i_data_m2,i_data_m3)
+anova(i_data_m3,i_data_m4)
+anova(i_data_m4,i_data_m5)
+anova(i_data_m5,i_data_m6)
+anova(i_data_m6,i_data_m7)
+i_model<-i_data_m2
+
+#Japanese
+j_data_m1 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores*beat_tasks*beat_scores,
+        data=j_data)
+summary(j_data_m1)
+
+j_data_m2 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores+beat_tasks*beat_scores,
+        data=j_data)
+summary(j_data_m2)
+
+j_data_m3 <- lm(language_dprime ~
+                              mean_working_memory+
+                              gs_tasks*gs_scores+
+                              melody_tasks*melody_scores+beat_tasks+beat_scores,
+        data=j_data)
+summary(j_data_m3)
+
+
+anova(j_data_m1,j_data_m2)
+anova(j_data_m2,j_data_m3)
+j_model<-j_data_m2
+```  
+
+```{r}
+anova(m_data_m1,m_data_m2)
+anova(m_data_m2,m_data_m3)
+anova(m_data_m3,m_data_m4)
+anova(m_data_m4,m_data_m5)
+anova(m_data_m5,m_data_m6)
+#model three is the parsimonisous model due to better no co-linearity. Simplest takes into account most variance
+m_model<-m_data_m6
+
+#italian data
+#l1_coded is not here because it only has one level in the dataset so far.
+i_data_m1 <- lm(language_dprime ~
+        gs_general +
+        gs_activeeng +
+        gs_perceptabil +
+        gs_musictrain +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = i_data) 
+summary(i_data_m1)
+
+
+i_data_m2 <- lm(language_dprime ~
+        gs_general +
+        gs_perceptabil +
+        gs_musictrain +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score,
+        data = i_data) 
+summary(i_data_m2)
+
+i_data_m3 <- lm(language_dprime ~
+        gs_general +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score,
+        data = i_data) 
+summary(i_data_m3)
+
+i_data_m4 <- lm(language_dprime ~
+        gs_general +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score,
+        data = i_data) 
+summary(i_data_m4)
+
+i_data_m5 <- lm(language_dprime ~
+        gs_general +
+        gs_singingabil +
+        MET_dprime_Rhythm +
+        mean_working_memory,
+        data = i_data) 
+summary(i_data_m5)
+
+anova(i_data_m1,i_data_m2)
+anova(i_data_m2,i_data_m3)
+anova(i_data_m3,i_data_m4)
+anova(i_data_m4,i_data_m5)
+anova(i_data_m4,i_data_m5)
+#going with model 5 to reduce colinearities completely
+i_model<-i_data_m5
+
+#Japanese model comparison
+j_data_m1 <- lm(language_dprime ~
+        gs_general +
+        gs_activeeng +
+        gs_perceptabil +
+        gs_musictrain +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = j_data) 
+summary(j_data_m1)
+
+j_data_m2 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score +
+        melody_score,
+        data = j_data) 
+summary(j_data_m2)
+
+j_data_m3 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_singingabil +
+        gs_emotions +
+        MET_dprime_Melody +
+        MET_dprime_Rhythm +
+        mean_working_memory +
+        beat_score,
+        data = j_data) 
+summary(j_data_m3)
+
+j_data_m4 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_singingabil +
+        MET_dprime_Melody +
+        mean_working_memory +
+        beat_score,
+        data = j_data) 
+summary(j_data_m4)
+
+j_data_m5 <- lm(language_dprime ~
+        gs_activeeng +
+        gs_singingabil +
+        mean_working_memory +
+        beat_score,
+        data = j_data) 
+summary(j_data_m5)
+
+anova(j_data_m1,j_data_m2)
+anova(j_data_m2,j_data_m3)
+anova(j_data_m3,j_data_m4)
+anova(j_data_m4,j_data_m5)
+#model 4 is the parsimonious model
+j_model<-j_data_m4
+```
+
+```{r}
+cor_data<-all_data%>%
+  select(Participant.Private.ID,c(gs_activeeng:melody_score))%>%
+  select(!c(max_working_memory,min_working_memory))%>%
+  unique()%>%
+  select(!Participant.Private.ID)
+  
+cor_matrix <- cor(cor_data, use = "complete.obs")
+
+
+install.packages("corrplot")
+library(corrplot)
+
+# Visualize the correlation matrix
+corrplot(cor_matrix, method = "circle")
+corrplot(cor_matrix, method = "circle", type = "lower",addCoef.col = "black")
+titile="correlations of 11 variables"
+c1<-corrplot(cor_matrix, method = "circle", type = "lower")
+ save_ggplot(c1)
+
+write.csv(cor_matrix, "data_output/corr_matrix.csv", row.names = FALSE)
+# View the correlation matrix
+print(cor_matrix)
+```
+
+```{r}
+check_model(m_model)
+check_model(i_model)
+check_model(j_model)
+```
+
+```{r}
+#full model
+m_model_form <- tidy(m_data_m1)%>%
+  mutate(number=row_number(),
+         term=as.factor(term))%>%
+  select(term,number)
+# Tidy the model output
+m_model_df <- tidy(m_model)
+m_model_df<-m_model_form%>%
+  left_join(m_model_df)
+m_model_df$model<-"Mandarin"
+
+i_model_df <- tidy(i_model)
+i_model_df<-m_model_form%>%
+  left_join(i_model_df)
+i_model_df$model<-"Italian"
+
+j_model_df <- tidy(j_model)
+j_model_df<-m_model_form%>%
+  left_join(j_model_df)
+j_model_df$model<-"Japanese"
+
+all_models<-m_model_df%>%
+  bind_rows(i_model_df)%>%
+  bind_rows(j_model_df)%>%
+  mutate(
+    conf_lower = estimate - 1.96 * std.error,
+    conf_higher = estimate + 1.96 * std.error)%>%
+  mutate(significance = case_when(
+    p.value < 0.001 ~ "***",
+    p.value < 0.01  ~ "**",
+    p.value < 0.05  ~ "*",
+    TRUE            ~ ""
+  ))
+
+dodge_width <- position_dodge(width = 0.8)
+
+names<-all_models%>%
+  select(term)%>%
+  unique()
+names$updated_terms<-c("Intercepts",
+                       "Goldsmiths general","Goldsmiths engagement","Goldsmiths perception",
+                       "Goldsmiths training","Goldsmiths singing","Goldsmiths emotions",
+                       "Musical Ear Test d' Melody","Musical Ear Test d' Rhythm","Working-memory",
+                       "Auditory-motor Rhythm","Auditory-motor Melody")
+
+all_models<-all_models%>%
+  right_join(names)%>%
+  arrange(number) %>%
+  mutate(updated_terms = factor(updated_terms, levels = unique(updated_terms)))
+
+
+View(all_models)
+title="Japanese,Italian, Mandarin max models structure: parsimonious effects"
+p1<-all_models %>%
+  ggplot(aes(x = term, y = estimate, color = model)) +
+  geom_point(position = dodge_width,shape=19,size=3) +
+  geom_text(aes(label=significance,y=-2),position=dodge_width,width = 0.1,size=5,show_guide=F)+
+  geom_errorbar(aes(ymin = conf_lower, ymax = conf_higher), position = dodge_width, width = 0.1,linewidth=1.2) +
+  scale_x_discrete(limits=rev)+
+  coord_flip() + 
+  theme_minimal() +
+  labs(
+    x = "Terms",
+    y = "Estimate")+
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        legend.position = c(.75, .3),
+        legend.background = element_rect(fill="#E0E0E0",
+                                  size=0, linetype="solid",
+                                  colour ="black"))+
+  geom_vline(xintercept=seq(1.5, length(unique(all_models$term))-0.5, 1), 
+             lwd=.1, colour="black")+
+  geom_hline(yintercept=0,lwd=.1, colour="black")+
+  scale_color_manual(values = c("#C41230", "#000000", "#719F94")) 
+p1
+p2<-p1+guides(
+  fill = guide_legend(
+    title = "Legend Title",
+    override.aes = aes(label = "")
+  )
+)
+p2
+save_ggplot(p2,width = 4.5,height=4.5)
+```
+
+
+```{r}
+#csv output for dynamic writing in LaTex:
+
+#participant removal
+starting_participants<-nrow(data_list$Digit_Span__Advanced)-nrow(removed_for_l1)
+kept_participants<-length(unique(all_data$Participant.Private.ID))
+removed_participants<-starting_participants-kept_participants
+l1_removed_participants<-nrow(removed_for_l1)
+
+keys <- c("starting_participants", "kept_participants", "removed_participants","l1_removed_participants")
+values <- c(starting_participants, kept_participants, removed_participants,l1_removed_participants)
+
+participant_removal <- data.frame(Statistic = keys, Value = values, stringsAsFactors = FALSE)%>%
+  mutate(Value=round(Value,2))
+
+#kept participant by experiment
+kept_participants_each_exp<-all_data%>%
+  select(Participant.Private.ID,experiment)%>%
+  unique()%>%
+  group_by(experiment)%>%
+  summarise(Value = n(),
+            Statistic = paste(experiment,".after",sep=""))%>%
+  unique()%>%
+  ungroup()%>%
+  select(-experiment)
+
+#all participant by experiment
+all_participants_each_exp<-met_data%>%
+  select(Participant.Private.ID,experiment)%>%
+  unique()%>%
+  group_by(experiment)%>%
+  summarise(Value = n(),
+            Statistic = paste(experiment,".before",sep=""))%>%
+  unique()%>%
+  ungroup()%>%
+  select(-experiment)
+
+participant_removal<-participant_removal%>%
+  bind_rows(kept_participants_each_exp)%>%
+  bind_rows(all_participants_each_exp)%>%
+  mutate(Value=round(Value,2))
+    
+#participant age
+age<-all_data%>%
+  select(Participant.Private.ID,age)%>%
+  unique()%>%
+  summarize(mean_age=mean(as.numeric(age)),
+            sd_age=sd(as.numeric(age)))%>%
+  pivot_longer(cols=everything(),names_to = "Statistic",values_to = "Value")%>%
+  mutate(Value=round(Value,2))  
+  
+###########
+#participant and item removal
+
+taskremoval <- lang_parts %>%
+  bind_rows(lang_items) %>%
+  mutate(after = before - remove)
+
+
+# Define a function to create a dataframe for a new row
+create_new_row <- function(Statistic, before, remove, after) {
+  data.frame(Statistic = as.character(Statistic), 
+             before = as.numeric(before), 
+             remove = as.numeric(remove), 
+             after = as.numeric(after))
+}
+
+# Create a list of new rows as dataframes
+new_rows <- list(
+  create_new_row("melody_item", before_mad_removal_item_melody, 
+                 before_mad_removal_item_melody - after_mad_removal_item_melody, 
+                 after_mad_removal_item_melody),
+  create_new_row("rhythm_item", before_mad_removal_item_rhythm, 
+                 before_mad_removal_item_rhythm - after_mad_removal_item_rhythm, 
+                 after_mad_removal_item_rhythm),
+  create_new_row("melody_part", before_mad_removal_part_melody, 
+                 before_mad_removal_part_melody - after_mad_removal_part_melody, 
+                 after_mad_removal_part_melody),
+  create_new_row("rhythm_part", before_mad_removal_part_rhythm, 
+                 before_mad_removal_part_rhythm - after_mad_removal_part_rhythm, 
+                 after_mad_removal_part_rhythm),
+  create_new_row("RTmet", before_mad_removal_RTmet, 
+                 before_mad_removal_RTmet - after_mad_removal_RTmet, 
+                 after_mad_removal_RTmet)
+)
+
+# Combine the existing dataframe with the new rows
+taskremoval <- do.call(rbind, c(list(taskremoval), new_rows))
+
+taskremoval_long<-taskremoval%>%
+  pivot_longer(col=c(before:after),names_to = "type",values_to = "Value")%>%
+  mutate(Statistic=paste(Statistic,type,sep="."))%>%
+  select(!type)%>%
+  mutate(Value=round(Value,2))
+
+
+
+#cronbachs alpha
+cronbach_list <- list(gs = gs_cronbach_alpha, 
+                      met = met_cronbach_alpha, 
+                      melody = melody_cronbach_alpha, 
+                      rhythm = rhythm_cronbach_alpha)
+
+# Extract the 'alpha' value from each and create a dataframe
+cronbachs_alpha_df <- data.frame(
+  Statistic = names(cronbach_list),
+  Value = sapply(cronbach_list, function(x) x$alpha)
+)%>%
+  mutate(Value=round(Value,2))
+
+#this code is somewhat problematic because it doesn't fix .001 to three digits
+dynamic_models<-all_models%>%
+  mutate(Statistic = paste(model,term,sep="."))%>%
+  select(Statistic,estimate,std.error,statistic,p.value,
+         conf_lower,conf_higher)%>%
+  na.omit()%>%
+  pivot_longer(cols=c(estimate:conf_higher),names_to="part",values_to="Value")%>%
+  mutate(Statistic=paste(Statistic,part,sep="."))%>%
+  select(!part)%>%
+  mutate(Value =as.numeric(Value))%>%
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value <= 0.01 & Value > 0.001, 0.01, Value))%>%
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value <= 0.05 & Value > 0.01, 0.05, Value))%>%
+  mutate(Value = ifelse(grepl("p.value", Statistic) & Value > 0.05, 100, Value))%>%
+  mutate(Value = format(round(Value, digits = 2), nsmall = 2))
+
+grepl("p.value", dynamic_models$Statistic)
+dynamic_models
+age$Value <- format(age$Value , nsmall = 2)
+create_folder_same_level("data_output")
+write.csv(age, "data_output/age.csv", row.names = FALSE)
+write.csv(participant_removal, "data_output/participant_removal.csv", row.names = FALSE)
+write.csv(taskremoval_long, "data_output/taskremoval.csv", row.names = FALSE)
+write.csv(cronbachs_alpha_df, "data_output/cronbach_alpha.csv", row.names = FALSE)
+write.csv(dynamic_models, "data_output/dynamic_models.csv", row.names = FALSE)
+```
