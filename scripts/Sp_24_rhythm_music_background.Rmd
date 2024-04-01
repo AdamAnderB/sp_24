@@ -39,7 +39,7 @@ source("functions.R")
 #file management
 master_path<-"/Users/adambramlett/scripts/music_project_23/data"
 #data pull
-data_list <- readRDS(file.path(master_path,"rds_folder","all_experiments_combined_list_cleaned.rds"))
+data_list <- readRDS(file.path(master_path,"rds_folder","all_experiments_combined_list_cleaned_sp_24.rds"))
 ```
 
 ```{r}
@@ -71,7 +71,7 @@ p1<-work_memory%>%
   ggplot(aes(x=mean_working_memory))+
   geom_histogram()+
   ggtitle(title)
-save_ggplot(p1)
+#save_ggplot(p1)
 ```
 
 ```{r}
@@ -83,9 +83,8 @@ gs_data%>%
   geom_violin()
 
 
-gs_data_agg<-
-  gs_data%>%
-  select(-rating)%>%
+gs_data_agg<-gs_data%>%
+  dplyr::select(-rating)%>%
   pivot_wider(names_from = question_content,
               values_from = score,
               names_prefix = "gs_")
@@ -98,6 +97,7 @@ print(gs_cronbach_alpha)
 ```
 
 ```{r}
+
 #Musical ear clean up
 #removal of data by Median absolute deviation(mad)
 mad_standard=3
@@ -111,7 +111,7 @@ met_data_clean<-met_data %>%
          mean_distance = mean(abs_distance),
          upper_mad = display_medians+(mean_distance*mad_standard),
          lower_mad = display_medians-(mean_distance*mad_standard))%>%
-  filter(log_rt<upper_mad &log_rt>lower_mad)
+  dplyr::filter(log_rt<upper_mad &log_rt>lower_mad)
 
 after_mad_removal_RTmet<-nrow(met_data_clean)
 
@@ -209,6 +209,7 @@ item_rhythm_agg<-data_rhythm_complete%>%
          upper_mad = display_medians+(mean_distance*mad_standard),
          lower_mad = display_medians-(mean_distance*mad_standard))%>%
   filter(accuracy<upper_mad &accuracy>lower_mad)
+
 
 after_mad_removal_item_rhythm<-length(unique(item_rhythm_agg$sound_stimuli_list))
 #1 participants removed here.
@@ -555,8 +556,7 @@ p1<-mij_data_agg_item%>%
         legend.position = "none")
 save_ggplot(p1)
 
-View(keep)
-View(remove)
+
 keep<-mij_data_agg_item%>%filter(remove==0)
 remove<-mij_data_agg_item%>%filter(remove==1)
 mij_data<-mij_data%>%filter(Sound1 %in% keep$Sound1)
