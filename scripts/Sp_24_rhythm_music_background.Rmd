@@ -39,7 +39,19 @@ source("functions.R")
 #file management
 master_path<-"/Users/adambramlett/scripts/music_project_23/data"
 #data pull
-data_list <- readRDS(file.path(master_path,"rds_folder","all_experiments_combined_list_cleaned_sp_24.rds"))
+
+#removing id info
+#data_list <- readRDS(file.path(master_path,"rds_folder","all_experiments_combined_list_cleaned_sp_24.rds"))
+#data_list$End_questions <- NULL
+# Use saveRDS to write the object to disk
+#saveRDS(data_list, file = file.path(master_path,"rds_folder","all_experiments_sp_24.rds"))
+
+
+data_list <- readRDS(file.path(master_path,"rds_folder","all_experiments_sp_24.rds"))
+
+data_list$
+
+
 ```
 
 ```{r}
